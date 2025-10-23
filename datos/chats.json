@@ -1,0 +1,459 @@
+{
+  "chats": [
+    {
+      "id": "chat-maria-porcat-1",
+      "chat": "m4r14-n3wt0n - porcat",
+      "displayName": "m4r14 & porcat",
+      "miembros": [
+        "m4r14-n3wt0n",
+        "porcat"
+      ],
+      "mensajes": [
+        {
+          "id": "m1",
+          "de": "m4r14-n3wt0n",
+          "mensaje": "hola",
+          "timestamp": 1690000000000
+        },
+        {
+          "id": "m1755034137426",
+          "de": "porcat",
+          "mensaje": "hola",
+          "timestamp": 1755034137426
+        }
+      ]
+    },
+    {
+      "id": "chat-porcat-ucosuc113-1",
+      "chat": "ucosuc113 - porcat",
+      "displayName": "ucosuc113 & porcat",
+      "miembros": [
+        "ucosuc113",
+        "porcat"
+      ],
+      "mensajes": [
+        {
+          "id": "m1",
+          "de": "ucosuc113",
+          "mensaje": "hola",
+          "timestamp": 1690000000000
+        },
+        {
+          "id": "m1755034137426",
+          "de": "porcat",
+          "mensaje": "hola",
+          "timestamp": 1755034137426
+        }
+      ]
+    },
+    {
+      "id": "chat-porcat-m4r14-n3wt0n-ucosuc113-1755035183311",
+      "chat": "porcat - m4r14-n3wt0n - ucosuc113",
+      "displayName": "porcat & m4r14-n3wt0n, ucosuc113",
+      "miembros": [
+        "porcat",
+        "m4r14-n3wt0n",
+        "ucosuc113"
+      ],
+      "mensajes": [
+        {
+          "id": "m1755035183311",
+          "de": "porcat",
+          "mensaje": "Grupo creado",
+          "timestamp": 1755035183311
+        },
+        {
+          "id": "m1755035187864",
+          "de": "porcat",
+          "mensaje": "hola",
+          "timestamp": 1755035187864
+        },
+        {
+          "id": "m1755035227758",
+          "de": "ucosuc113",
+          "mensaje": "hola",
+          "timestamp": 1755035227758
+        }
+      ]
+    },
+    {
+      "id": "chat-4ndr3s-2341-m4r14-n3wt0n-1755035322963",
+      "chat": "4ndr3s-2341 - m4r14-n3wt0n",
+      "displayName": "4ndr3s-2341 & m4r14-n3wt0n",
+      "miembros": [
+        "4ndr3s-2341",
+        "m4r14-n3wt0n"
+      ],
+      "mensajes": [
+        {
+          "id": "m1755035322963",
+          "de": "4ndr3s-2341",
+          "mensaje": "hola",
+          "timestamp": 1755035322963
+        },
+        {
+          "id": "m1755035342208",
+          "de": "4ndr3s-2341",
+          "mensaje": "cuando me puedes vender la espada",
+          "timestamp": 1755035342208
+        }
+      ]
+    },
+    {
+      "id": "chat-4ndr3s-2341-ucosuc113-1755036284398",
+      "chat": "4ndr3s-2341 - ucosuc113",
+      "displayName": "4ndr3s-2341 & ucosuc113",
+      "miembros": [
+        "4ndr3s-2341",
+        "ucosuc113"
+      ],
+      "mensajes": [
+        {
+          "id": "m1755036284398",
+          "de": "4ndr3s-2341",
+          "mensaje": "hola",
+          "timestamp": 1755036284398
+        },
+        {
+          "id": "m1755036307228",
+          "de": "ucosuc113",
+          "mensaje": "holaaa",
+          "timestamp": 1755036307228
+        },
+        {
+          "id": "m1755036339083",
+          "de": "ucosuc113",
+          "mensaje": "oie",
+          "timestamp": 1755036339083
+        },
+        {
+          "id": "m1755036346787",
+          "de": "ucosuc113",
+          "mensaje": "hagamos grupo con el admin, te parece??",
+          "timestamp": 1755036346787
+        }
+      ]
+    },
+    {
+      "id": "chat-3900-ucosuc113-1755036284318",
+      "chat": "3900 - ucosuc113",
+      "displayName": "Solo Quejas",
+      "miembros": [
+        "3900",
+        "ucosuc113"
+      ],
+      "mensajes": []
+    },
+    {
+      "id": "chat-4ndr3s-2341-ucosuc113-1755036284399",
+      "chat": "ucosuc113 - 3900",
+      "displayName": "Solo Quejas 2",
+      "miembros": [
+        "ucosuc113",
+        "3900"
+      ],
+      "mensajes": [
+        {
+          "id": "m1755036693825",
+          "de": "ucosuc113",
+          "mensaje": "hola",
+          "timestamp": 1755036693825
+        },
+        {
+          "id": "m1755036718272",
+          "de": "4ndr3s-2341",
+          "mensaje": "hola",
+          "timestamp": 1755036718272
+        },
+        {
+          "id": "m1755036734993",
+          "de": "ucosuc113",
+          "mensaje": "reporte 53 creo que es",
+          "timestamp": 1755036734992
+        },
+        {
+          "id": "m1755036751688",
+          "de": "ucosuc113",
+          "mensaje": "los grupos funcionan muy mal, no deja añadir miembros, ni crear grupos",
+          "timestamp": 1755036751688
+        },
+        {
+          "id": "m1755036758880",
+          "de": "ucosuc113",
+          "mensaje": "no deja añadir publicaciones",
+          "timestamp": 1755036758879
+        },
+        {
+          "id": "m1755036764072",
+          "de": "ucosuc113",
+          "mensaje": "siga durmiendo",
+          "timestamp": 1755036764071
+        },
+        {
+          "id": "m1755036792008",
+          "de": "3900",
+          "mensaje": "jajaja",
+          "timestamp": 1755036792007
+        },
+        {
+          "id": "m1755036798504",
+          "de": "3900",
+          "mensaje": "esque somos mojang v2",
+          "timestamp": 1755036798504
+        },
+        {
+          "id": "m1755036848512",
+          "de": "3900",
+          "mensaje": "y andres, no habla?",
+          "timestamp": 1755036848511
+        },
+        {
+          "id": "m1755036852982",
+          "de": "4ndr3s-2341",
+          "mensaje": "jajajajajaajajjajajaja",
+          "timestamp": 1755036852982
+        },
+        {
+          "id": "m1755036884103",
+          "de": "ucosuc113",
+          "mensaje": "tampoco deja actualizar los nombres de las cosas, para cuando tendran arreglado esto??",
+          "timestamp": 1755036884103
+        },
+        {
+          "id": "m1755036891007",
+          "de": "3900",
+          "mensaje": "digamos una semana",
+          "timestamp": 1755036891006
+        },
+        {
+          "id": "m1755036892477",
+          "de": "4ndr3s-2341",
+          "mensaje": "soy tan pero tan bruto que cuando intente enviar el mensaje me olvide que aqui no es con enter es dandole click a enviar",
+          "timestamp": 1755036892476
+        },
+        {
+          "id": "m1755036906719",
+          "de": "3900",
+          "mensaje": "creo que en 2 dias tendran soporte a enviar archivos",
+          "timestamp": 1755036906719
+        },
+        {
+          "id": "m1755036929423",
+          "de": "3900",
+          "mensaje": "ya que tenemos planeado añadir muchas cosas",
+          "timestamp": 1755036929422
+        },
+        {
+          "id": "m1755036939735",
+          "de": "ucosuc113",
+          "mensaje": "okok",
+          "timestamp": 1755036939735
+        },
+        {
+          "id": "m1755036973270",
+          "de": "ucosuc113",
+          "mensaje": "mira que saldra gta 6 antes que el sistema de llamadas que con ansias esperamos desde el año pasado JSJSJSJS",
+          "timestamp": 1755036973270
+        },
+        {
+          "id": "m1755036983558",
+          "de": "3900",
+          "mensaje": "jodete 😽",
+          "timestamp": 1755036983558
+        },
+        {
+          "id": "m1755036998238",
+          "de": "4ndr3s-2341",
+          "mensaje": "una pregunta 3900 por que si eres tan poderoso te demorarias en hacer algo que es tan basico para tus avilidades",
+          "timestamp": 1755036998237
+        },
+        {
+          "id": "m1755037006846",
+          "de": "3900",
+          "mensaje": "hui",
+          "timestamp": 1755037006846
+        },
+        {
+          "id": "m1755037013854",
+          "de": "3900",
+          "mensaje": "auch",
+          "timestamp": 1755037013853
+        },
+        {
+          "id": "m1755037022246",
+          "de": "3900",
+          "mensaje": "senti como se me rompio una costilla",
+          "timestamp": 1755037022246
+        },
+        {
+          "id": "m1755037025077",
+          "de": "4ndr3s-2341",
+          "mensaje": "no lo digo a mal es que es una duda",
+          "timestamp": 1755037025077
+        },
+        {
+          "id": "m1755037032629",
+          "de": "3900",
+          "mensaje": "pera y reviso mi botiquin de chistes",
+          "timestamp": 1755037032629
+        },
+        {
+          "id": "m1755037046605",
+          "de": "3900",
+          "mensaje": "mi estimado",
+          "timestamp": 1755037046605
+        },
+        {
+          "id": "m1755037068653",
+          "de": "3900",
+          "mensaje": "quiero decirle que la popo quiere cagar codigo, pero anda tapada",
+          "timestamp": 1755037068653
+        },
+        {
+          "id": "m1755037095205",
+          "de": "3900",
+          "mensaje": "porfavor sobala, y haci se destapara",
+          "timestamp": 1755037095204
+        },
+        {
+          "id": "m1755037108852",
+          "de": "ucosuc113",
+          "mensaje": "ohhhhh XD",
+          "timestamp": 1755037108852
+        },
+        {
+          "id": "m1755037126565",
+          "de": "3900",
+          "mensaje": "😝",
+          "timestamp": 1755037126565
+        },
+        {
+          "id": "m1755037134270",
+          "de": "4ndr3s-2341",
+          "mensaje": "entonces solo es que tenes cosas mucho mejores que hacer ta pro",
+          "timestamp": 1755037134270
+        },
+        {
+          "id": "m1755037149653",
+          "de": "3900",
+          "mensaje": "en verdad es arreglar muchos pero muchos bugs",
+          "timestamp": 1755037149652
+        },
+        {
+          "id": "m1755037188884",
+          "de": "4ndr3s-2341",
+          "mensaje": "eso tiene sentido",
+          "timestamp": 1755037188884
+        },
+        {
+          "id": "m1755037188916",
+          "de": "ucosuc113",
+          "mensaje": "aja y mi paga??",
+          "timestamp": 1755037188915
+        },
+        {
+          "id": "m1755037198187",
+          "de": "3900",
+          "mensaje": "paga tus nalgas invisibles",
+          "timestamp": 1755037198187
+        },
+        {
+          "id": "m1755037207332",
+          "de": "3900",
+          "mensaje": "😘",
+          "timestamp": 1755037207332
+        },
+        {
+          "id": "m1755037218855",
+          "de": "4ndr3s-2341",
+          "mensaje": "uf uf uf que papeada",
+          "timestamp": 1755037218855
+        },
+        {
+          "id": "m1755037219659",
+          "de": "ucosuc113",
+          "mensaje": "noooo jajjajhaskjhsad",
+          "timestamp": 1755037219659
+        },
+        {
+          "id": "m1755037235935",
+          "de": "4ndr3s-2341",
+          "mensaje": "duitama te vas a dejar",
+          "timestamp": 1755037235934
+        },
+        {
+          "id": "m1755037238963",
+          "de": "ucosuc113",
+          "mensaje": "y pregunta seria",
+          "timestamp": 1755037238963
+        },
+        {
+          "id": "m1755037257771",
+          "de": "ucosuc113",
+          "mensaje": "es verdad que añadiran stickers a la plataforma??",
+          "timestamp": 1755037257771
+        },
+        {
+          "id": "m1755037265051",
+          "de": "ucosuc113",
+          "mensaje": "o solo es un mito de por hay",
+          "timestamp": 1755037265051
+        },
+        {
+          "id": "m1755037277099",
+          "de": "3900",
+          "mensaje": "sige siendo secreto",
+          "timestamp": 1755037277099
+        },
+        {
+          "id": "m1755037405090",
+          "de": "ucosuc113",
+          "mensaje": "ya puedes eliminar a andres del chat, ya tuvieron su espacio, diria yo, no se, funalo, yo que se XD",
+          "timestamp": 1755037405090
+        },
+        {
+          "id": "m1755037413706",
+          "de": "3900",
+          "mensaje": "lo eliminare",
+          "timestamp": 1755037413706
+        },
+        {
+          "id": "m1755037449250",
+          "de": "4ndr3s-2341",
+          "mensaje": "no",
+          "timestamp": 1755037449250
+        }
+      ]
+    },
+    {
+      "id": "chat-4ndr3s-2341-m4r14-n3wt0n-ucosuc113-1755037798087",
+      "chat": "4ndr3s-2341 - m4r14-n3wt0n - ucosuc113",
+      "displayName": "popo 3000",
+      "miembros": [
+        "4ndr3s-2341",
+        "m4r14-n3wt0n",
+        "ucosuc113"
+      ],
+      "mensajes": [
+        {
+          "id": "m1755037798087",
+          "de": "4ndr3s-2341",
+          "mensaje": "Grupo creado",
+          "timestamp": 1755037798087
+        },
+        {
+          "id": "m1755037808320",
+          "de": "4ndr3s-2341",
+          "mensaje": "hols",
+          "timestamp": 1755037808319
+        },
+        {
+          "id": "m1755037824270",
+          "de": "ucosuc113",
+          "mensaje": "ola chavales",
+          "timestamp": 1755037824270
+        }
+      ]
+    }
+  ]
+}

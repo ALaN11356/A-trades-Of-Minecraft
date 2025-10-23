@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Audio</title>
+</head>
+<body>
+  <audio id="musica" src="musica.mp3" autoplay loop></audio>
+
+  <script>
+    const audio = document.getElementById("musica");
+    audio.volume = 1;
+    audio.play().catch(err => {
+      console.error("No se pudo iniciar el audio:", err);
+    });
+  </script>
+</body>
+</html>

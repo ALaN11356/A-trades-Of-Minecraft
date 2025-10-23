@@ -1,0 +1,712 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Tienda Infernal</title>
+  <link href="https://fonts.googleapis.com/css2?family=UnifrakturCook:wght@700&display=swap" rel="stylesheet">
+  <script src="verificarid.js"></script>
+  <style>
+body {
+  margin: 0;
+  font-family: 'UnifrakturCook', cursive;
+  background: radial-gradient(circle at center, #000000 0%, #1a0000 60%, #0a0000 100%);
+  color: #ff4444;
+  padding: 30px;
+  overflow-x: hidden;
+  position: relative;
+  transition: background 2s ease-in-out;
+}
+
+/* Animación para título */
+h1 {
+  text-align: center;
+  font-size: 3.5em;
+  text-shadow: 0 0 10px crimson, 0 0 25px red, 2px 2px 5px black;
+  margin-bottom: 40px;
+  animation: titlePulse 3s infinite ease-in-out;
+  letter-spacing: 2px;
+  transition: text-shadow 0.3s;
+}
+
+@keyframes titlePulse {
+  0%, 100% {
+    text-shadow: 0 0 10px crimson, 0 0 25px red;
+  }
+  50% {
+    text-shadow: 0 0 30px crimson, 0 0 50px red;
+  }
+}
+
+/* Botones agrupados */
+.botones-header,
+.botones-chat {
+  display: flex;
+  justify-content: center;
+  gap: 30px;
+  margin-bottom: 40px;
+  flex-wrap: wrap;
+  animation: fadeInUp 1.2s ease-out;
+}
+
+.botones-chat {
+  justify-content: flex-start;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(40px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Estilo base botones */
+.botones-header button,
+.botones-chat button {
+  padding: 14px 24px;
+  background: linear-gradient(135deg, #8b0000, #ff0000);
+  border: none;
+  border-radius: 12px;
+  font-family: 'Courier New', monospace;
+  font-weight: bold;
+  color: black;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  letter-spacing: 1px;
+  box-shadow: 0 0 15px crimson;
+}
+
+.botones-chat button {
+  border-radius: 25px;
+  padding: 20px 28px;
+  font-size: 1.05em;
+}
+
+/* Efecto hover en botones */
+.botones-header button:hover,
+.botones-chat button:hover {
+  background: linear-gradient(135deg, #ff0000, #ff5555);
+  box-shadow: 0 0 25px red, 0 0 50px crimson;
+  transform: scale(1.08);
+}
+
+/* Contenedor de artículos */
+#contenedor-articulos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 40px;
+  justify-content: center;
+  position: relative;
+  z-index: 2;
+  animation: fadeInUp 2s ease-out;
+}
+
+.zona-articulos {
+  background: rgba(50, 0, 0, 0.4); /* rojo oscuro translúcido */
+  padding: 50px 30px;
+  margin-top: 40px;
+  border-radius: 30px;
+  box-shadow: 0 0 50px rgba(255, 0, 0, 0.3), inset 0 0 20px rgba(255, 50, 50, 0.2);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  border: 1px solid rgba(255, 0, 0, 0.2);
+  width: 90%;
+  max-width: 1400px;
+  margin-left: auto;
+  margin-right: auto;
+}
+/* Tarjeta del artículo */
+.articulo {
+  z-index: 2;
+  background: linear-gradient(145deg, #220000, #0d0000);
+  padding: 24px;
+  width: 360px;
+  border-radius: 18px;
+  box-shadow: 0 0 25px #8b0000, inset 0 0 15px #550000;
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  animation: articleAppear 0.8s ease-in-out both;
+}
+
+@keyframes articleAppear {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.articulo:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 0 40px crimson, inset 0 0 25px red;
+}
+
+/* Imagen destacada */
+.articulo img {
+  width: 100%;
+  height: 200px;
+  object-fit: cover;
+  border: 3px solid crimson;
+  border-radius: 10px;
+  margin-bottom: 15px;
+  box-shadow: 0 0 10px red;
+  transition: transform 0.3s ease, filter 0.3s ease;
+}
+
+.articulo:hover img {
+  transform: scale(1.03);
+  filter: brightness(1.1);
+}
+
+/* Botón de cerrar (X) */
+.articulo .x-btn {
+  z-index: 999;
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: #900;
+  color: white;
+  border: none;
+  font-weight: bold;
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  display: none;
+  cursor: pointer;
+  box-shadow: 0 0 5px black;
+  font-family: monospace;
+  transition: background 0.3s ease, transform 0.2s ease;
+}
+
+.articulo:hover .x-btn {
+  display: block;
+}
+
+.articulo .x-btn:hover {
+  background: #ff0000;
+  transform: scale(1.4);
+}
+
+/* Botón de abrir chat */
+.articulo .chat-btn {
+  margin-top: 15px;
+  background: linear-gradient(135deg, #4d0000, #8b0000);
+  border: none;
+  padding: 12px 14px;
+  color: #ffdddd;
+  font-family: 'Courier New', monospace;
+  font-weight: bold;
+  border-radius: 10px;
+  width: 100%;
+  box-shadow: 0 0 10px crimson;
+  transition: background 0.3s ease, box-shadow 0.3s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.articulo .chat-btn:hover {
+  background: linear-gradient(135deg, #8b0000, #ff0000);
+  color: white;
+  box-shadow: 0 0 20px red, 0 0 30px crimson;
+}
+
+.linea-separadora {
+  border: none;
+  border-top: 2px solid #ff0000;
+  margin: 30px auto;
+  width: 60%;
+  box-shadow: 0 0 15px red;
+  opacity: 0.6;
+}
+
+/* Panel infernal lateral */
+#panel-edicion {
+  position: fixed;
+  top: 100px;
+  right: -200px;
+  width: 180px;
+  background: linear-gradient(145deg, #220000, #0d0000);
+  box-shadow: -5px 0 25px crimson;
+  padding: 20px;
+  border-radius: 10px 0 0 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  transition: right 0.5s ease;
+  z-index: 999;
+}
+
+/* Cuando se muestra */
+#panel-edicion.activo {
+  right: 0;
+}
+
+/* Botones del panel */
+.panel-btn {
+  padding: 14px;
+  font-size: 1.2em;
+  font-family: 'Courier New', monospace;
+  background: linear-gradient(145deg, #550000, #330000);
+  color: #ffdddd;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  box-shadow: 0 0 10px crimson;
+  transition: all 0.3s ease;
+}
+
+.panel-btn:hover {
+  background: linear-gradient(145deg, #8b0000, #ff0000);
+  color: white;
+  box-shadow: 0 0 20px red;
+}
+.menu-edicion {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 70vw;
+  max-width: 900px;
+  height: auto;
+  background: linear-gradient(135deg, #0d0000, #1c0000);
+  border: 3px solid #ff0033;
+  box-shadow:
+    0 0 60px rgba(255, 0, 64, 0.6),
+    inset 0 0 30px rgba(255, 0, 64, 0.2),
+    0 10px 40px rgba(0, 0, 0, 0.8);
+  padding: 50px 60px;
+  border-radius: 30px;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+  font-family: 'Courier New', monospace;
+  color: #ffdddd;
+  animation: aparecerMenu 0.5s ease-out;
+  backdrop-filter: blur(12px);
+  background-blend-mode: overlay;
+}
+
+@keyframes aparecerMenu {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.9);
+    filter: blur(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+    filter: blur(0);
+  }
+}
+
+.menu-edicion h2 {
+  margin: 0;
+  font-size: 2.2em;
+  color: #ff3333;
+  text-shadow: 0 0 20px rgba(255, 0, 0, 0.7);
+  letter-spacing: 2px;
+  text-align: center;
+}
+
+.menu-edicion label {
+  font-weight: bold;
+  color: #ffbbbb;
+  font-size: 1.1em;
+  margin-bottom: 8px;
+  display: block;
+}
+
+.menu-edicion input,
+.menu-edicion textarea {
+  background: #1a0000;
+  color: #fff0f0;
+  border: none;
+  border-bottom: 2px solid crimson;
+  padding: 15px 18px;
+  border-radius: 12px;
+  width: 100%;
+  font-family: inherit;
+  font-size: 1.1em;
+  outline: none;
+  transition: all 0.3s ease;
+  box-shadow: inset 0 0 10px rgba(255, 0, 0, 0.2);
+}
+
+.menu-edicion input:focus,
+.menu-edicion textarea:focus {
+  border-bottom: 2px solid #ff0000;
+  box-shadow: 0 0 15px red, inset 0 0 12px #550000aa;
+  background: #220000;
+}
+
+.menu-edicion button {
+  padding: 16px;
+  font-size: 1.1em;
+  background: linear-gradient(135deg, #4d0000, #8b0000);
+  color: #fff;
+  border: none;
+  border-radius: 14px;
+  cursor: pointer;
+  box-shadow: 0 0 14px rgba(220, 20, 60, 0.6);
+  font-weight: bold;
+  transition: all 0.3s ease;
+  width: 48%;
+  letter-spacing: 1px;
+}
+
+.menu-edicion button:hover {
+  background: linear-gradient(135deg, #ff0000, #aa0000);
+  box-shadow: 0 0 25px red, 0 0 35px crimson;
+  transform: scale(1.05);
+}
+
+.menu-edicion form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.menu-edicion form div {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  margin-top: 20px;
+}
+
+.oculto {
+  display: none;
+}
+
+
+
+.articulo .edit-btn {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  background: #8b0000;
+  color: white;
+  border: none;
+  font-weight: bold;
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  display: none;
+  cursor: pointer;
+  font-family: monospace;
+  box-shadow: 0 0 5px black;
+  transition: background 0.3s ease, transform 0.2s ease;
+  z-index: 999;
+}
+
+.articulo:hover .edit-btn {
+  display: block;
+}
+
+.articulo .edit-btn:hover {
+  background: #ff0000;
+  transform: scale(1.2);
+}
+
+
+  </style>
+</head>
+<body>
+  <h1>Tienda del Infierno</h1>
+
+  <audio id="musica" src="musica.mp3" autoplay loop></audio>
+
+  <div class="botones-header">
+    <button onclick="location.href='crear.html'">➕</button>
+    <button onclick="activarModoEdicion()">✏️</button>
+    <button onclick="mostrarCuenta()">Cuenta</button>
+  </div>
+  <hr class="linea-separadora">
+
+  <div class="botones-chat">
+    <button onclick="location.href='chats.html'">💬</button>
+  </div>
+
+<div id="panel-edicion" class="panel-oculto">
+  <button id="btn-editar" class="panel-btn">Puto :3</button>
+  <button id="btn-borrar" class="panel-btn">🧹 Borrar</button>
+</div>
+
+<div class="zona-articulos">
+  <div id="contenedor-articulos"></div>
+</div>
+<div id="menu-edicion" class="menu-edicion oculto">
+  <h2>✏️ Editar Artículo</h2>
+  <form id="form-edicion">
+    <label>Nombre:</label>
+    <input type="text" id="edit-nombre">
+
+    <label>Precio:</label>
+    <input type="text" id="edit-precio">
+
+    <label>Descripción:</label>
+    <input type="text" id="edit-descripcion">
+
+    <label>Versión:</label>
+    <input type="text" id="edit-version">
+
+    <label>Servidor:</label>
+    <input type="text" id="edit-servidor">
+
+    <button type="submit">💾 Guardar</button>
+    <button type="button" id="cancelar-edicion">Cancelar</button>
+  </form>
+</div>
+
+  <script>
+    let userId = null;
+    let modoEdicion = false;
+
+    verificarID(() => {
+      userId = sessionStorage.getItem('userId');
+      cargarArticulos();
+    });
+
+    function mostrarCuenta() {
+      alert(`ID de sesión: ${userId}`);
+    }
+
+
+function activarModoEdicion() {
+  modoEdicion = !modoEdicion;
+  const panel = document.getElementById('panel-edicion');
+
+  if (modoEdicion) {
+    panel.classList.add('activo');
+  } else {
+    panel.classList.remove('activo');
+    ocultarBotonesEliminar();
+  }
+
+  document.querySelectorAll('.edit-btn').forEach(btn => {
+    btn.style.display = modoEdicion ? 'block' : 'none';
+  });
+}
+
+function ocultarBotonesEliminar() {
+  document.querySelectorAll('.x-btn').forEach(btn => btn.style.display = 'none');
+}
+
+document.getElementById('btn-borrar').onclick = () => {
+  document.querySelectorAll('.x-btn').forEach(btn => btn.style.display = 'block');
+};
+
+document.getElementById('btn-editar').onclick = () => {
+  alert("⚙️ Aquí aparecerá un menú para editar el artículo seleccionado (aún por programar).");
+};
+
+
+    function cargarArticulos() {
+      fetch('/articulos')
+        .then(res => res.json())
+        .then(articulos => {
+          const contenedor = document.getElementById('contenedor-articulos');
+          contenedor.innerHTML = "";
+
+          articulos.forEach(a => {
+            const div = document.createElement('div');
+            div.className = 'articulo';
+
+            const img = document.createElement('img');
+            img.src = `uploads/${a.imagen}`;
+            img.alt = a.nombre;
+
+            const nombre = document.createElement('h3');
+            nombre.textContent = a.nombre;
+
+            const precio = document.createElement('p');
+            precio.textContent = `💰 Precio: ${a.precio}`;
+
+            const descripcion = document.createElement('p');
+            descripcion.textContent = `📜 ${a.descripcion}`;
+
+            const version = document.createElement('p');
+            version.textContent = `🧪 Versión: ${a.version}`;
+
+            const servidor = document.createElement('p');
+            servidor.textContent = `🌐 Servidor: ${a.servidor}`;
+
+            const vendedor = document.createElement('p');
+            vendedor.textContent = `😈 Vendedor: ${a.vendedor}`;
+
+            const btnChat = document.createElement('button');
+            btnChat.textContent = "💬 Hablar con el vendedor";
+            btnChat.className = 'chat-btn';
+btnChat.onclick = () => {
+  if (a.vendedor === userId) {
+    alert("No puedes hablar contigo mismo.");
+    return;
+  }
+
+  fetch('/crear-o-seleccionar-chat', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      comprador: userId,
+      vendedor: a.vendedor
+    })
+  })
+  .then(res => res.json())
+  .then(data => {
+    if (data.ok) {
+      location.href = 'chats.html';
+    } else {
+      alert("⚠️ Error: " + data.error);
+    }
+  })
+  .catch(err => {
+    console.error("🔥 Error al crear chat:", err);
+    alert("Error infernal al intentar iniciar conversación.");
+  });
+};
+
+
+            const btnX = document.createElement('button');
+            btnX.textContent = 'X';
+            btnX.className = 'x-btn';
+            btnX.onclick = () => eliminarArticulo(a.imagen, div);
+
+            const btnEdit = document.createElement('button');
+btnEdit.textContent = '✏️';
+btnEdit.className = 'edit-btn';
+btnEdit.onclick = () => abrirMenuEdicion(div); // Usa la misma función que ya tienes
+
+div.appendChild(btnEdit);
+
+            if (a.vendedor === userId) {
+              btnX.style.display = modoEdicion ? 'block' : 'none';
+              div.appendChild(btnX);
+            }
+
+            div.appendChild(img);
+            div.appendChild(nombre);
+            div.appendChild(precio);
+            div.appendChild(descripcion);
+            div.appendChild(version);
+            div.appendChild(servidor);
+            div.appendChild(vendedor);
+            div.appendChild(btnChat);
+
+            contenedor.appendChild(div);
+          });
+        })
+        .catch(err => {
+          console.error("🔥 Error al cargar artículos:", err);
+        });
+    }
+
+    function eliminarArticulo(nombreImagen, divElemento) {
+      fetch('/eliminar-articulo', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ imagen: nombreImagen })
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.eliminado) {
+          divElemento.remove();
+        } else {
+          alert("⚠️ No se pudo eliminar.");
+        }
+      })
+      .catch(() => {
+        alert("💀 Error infernal al eliminar.");
+      });
+    }
+
+    let articuloSeleccionado = null;
+
+document.getElementById('btn-editar').onclick = () => {
+  const misArticulos = document.querySelectorAll('.articulo');
+  misArticulos.forEach(card => {
+  });
+};
+
+function abrirMenuEdicion(card) {
+  articuloSeleccionado = card;
+
+  document.getElementById('edit-nombre').value = card.querySelector('h3')?.textContent || "";
+  document.getElementById('edit-precio').value = extraerTexto(card, "💰 Precio:");
+  document.getElementById('edit-descripcion').value = extraerTexto(card, "📜");
+  document.getElementById('edit-version').value = extraerTexto(card, "🧪 Versión:");
+  document.getElementById('edit-servidor').value = extraerTexto(card, "🌐 Servidor:");
+
+  document.getElementById('menu-edicion').classList.remove('oculto');
+}
+
+function extraerTexto(card, etiqueta) {
+  const p = Array.from(card.querySelectorAll('p')).find(p => p.textContent.startsWith(etiqueta));
+  return p ? p.textContent.replace(etiqueta, '').trim() : "";
+}
+
+document.getElementById('form-edicion').onsubmit = function (e) {
+  e.preventDefault();
+
+  const nuevoNombre = document.getElementById('edit-nombre').value;
+  const nuevoPrecio = document.getElementById('edit-precio').value;
+  const nuevaDescripcion = document.getElementById('edit-descripcion').value;
+  const nuevaVersion = document.getElementById('edit-version').value;
+  const nuevoServidor = document.getElementById('edit-servidor').value;
+
+  articuloSeleccionado.querySelector('h3').textContent = nuevoNombre;
+  actualizarTexto(articuloSeleccionado, "💰 Precio:", nuevoPrecio);
+  actualizarTexto(articuloSeleccionado, "📜", nuevaDescripcion);
+  actualizarTexto(articuloSeleccionado, "🧪 Versión:", nuevaVersion);
+  actualizarTexto(articuloSeleccionado, "🌐 Servidor:", nuevoServidor);
+
+  document.getElementById('menu-edicion').classList.add('oculto');
+
+  // 🔥 NUEVO: Enviar los cambios al backend
+  const imagen = articuloSeleccionado.querySelector('img').src.split('/').pop();
+
+  fetch('/editar-articulo', {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      imagen: imagen,
+      nombre: nuevoNombre,
+      precio: nuevoPrecio,
+      descripcion: nuevaDescripcion,
+      version: nuevaVersion,
+      servidor: nuevoServidor
+    })
+  })
+  .then(res => res.json())
+  .then(data => {
+    if (data.ok) {
+      alert('✅ Artículo actualizado en la base de datos.');
+    } else {
+      alert('⚠️ Error: ' + data.error);
+    }
+  })
+  .catch(err => {
+    console.error('🔥 Error al enviar cambios:', err);
+    alert('Error infernal al intentar actualizar el artículo.');
+  });
+};
+
+document.getElementById('cancelar-edicion').onclick = () => {
+  document.getElementById('menu-edicion').classList.add('oculto');
+};
+
+function actualizarTexto(card, etiqueta, nuevoTexto) {
+  const p = Array.from(card.querySelectorAll('p')).find(p => p.textContent.startsWith(etiqueta));
+  if (p) p.textContent = `${etiqueta} ${nuevoTexto}`;
+}
+
+  </script>
+</body>
+</html>

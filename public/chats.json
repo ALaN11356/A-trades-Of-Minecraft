@@ -1,0 +1,13 @@
+{
+  "chats": [
+    {
+      "id": "chat-maria-porcat-1",
+      "chat": "m4r14-n3wt0n - porcat",
+      "displayName": "m4r14 & porcat",
+      "miembros": ["m4r14-n3wt0n","porcat"],
+      "mensajes": [
+        {"id":"m1","de":"m4r14-n3wt0n","mensaje":"hola","timestamp":1690000000000}
+      ]
+    }
+  ]
+}

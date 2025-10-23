@@ -1,0 +1,651 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Salas del Infierno</title>
+  <link href="https://fonts.googleapis.com/css2?family=Nosifer&display=swap " rel="stylesheet">
+  <script src="verificarId.js"></script>
+  <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: radial-gradient(circle at center, #1a0000 0%, #0d0000 100%);
+      color: #fceaea;
+      margin: 0;
+      display: flex;
+      height: 100vh;
+      overflow: hidden;
+      transition: background 2s ease;
+    }
+    .btn-back { position: fixed; left: 18px; top: 18px; z-index: 1200; background: linear-gradient(180deg,#220000,#440000); color: #ffdede; border: 1px solid rgba(255,80,80,0.2); padding: 8px 12px; border-radius: 10px; font-weight: 600; cursor: pointer; box-shadow: 0 4px 14px rgba(0,0,0,0.6); backdrop-filter: blur(4px); transition: transform 0.12s ease, box-shadow 0.12s; font-family: 'Share Tech Mono', monospace; }
+    .btn-back:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0,0,0,0.7); }
+    .sidebar { width: 28%; background-color: #140000; border-right: 1px solid #3a0000; display: flex; flex-direction: column; box-shadow: 3px 0 25px rgba(100, 0, 0, 0.5); animation: fadeInLeft 0.8s ease-out both; padding-top: 72px; }
+    .header { padding: 1.2rem; font-size: 1.6rem; text-align: center; background-color: #1c0000; text-shadow: 0 0 12px #ff3c3c, 0 0 20px #a00000; font-weight: bold; letter-spacing: 2px; color: #ff5c5c; border-bottom: 1px solid #3a0000; font-family: 'Share Tech Mono', monospace; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+    .btn-add { background: linear-gradient(135deg,#7a0000,#aa0000); border: 1px solid #ff7777; color: #fff; padding: 6px 10px; border-radius: 8px; cursor: pointer; font-weight: bold; box-shadow: 0 2px 6px rgba(255,0,0,0.2); }
+    .chat-list { flex: 1; overflow-y: auto; scrollbar-width: thin; scrollbar-color: #cc0000 #0a0000; animation: fadeInUp 1.2s ease-out both; }
+    .chat-list::-webkit-scrollbar { width: 6px; }
+    .chat-list::-webkit-scrollbar-thumb { background-color: #cc0000; border-radius: 3px; }
+    .chat-item { padding: 1rem 1.3rem; border-bottom: 1px solid #330000; cursor: pointer; transition: all 0.3s ease; color: #ffaaaa; font-size: 1rem; border-left: 3px solid transparent; font-family: 'Share Tech Mono', monospace; display:flex; align-items:center; justify-content:space-between; gap:8px; }
+    .chat-item:hover { background-color: #220000; padding-left: 1.7rem; border-left: 3px solid #aa0000; color: #fff0f0; }
+    .chat-meta { font-size:0.85rem; color:#ffbdbd; opacity:0.9; }
+    .main { flex: 1; background-color: #0a0000; display: flex; flex-direction: column; animation: fadeIn 1.2s ease-in-out both; padding-top: 18px; }
+    .main-header { padding: 1rem 1.5rem; background-color: #1a0000; border-bottom: 1px solid #3a0000; font-size: 1.05rem; font-weight: bold; text-shadow: 0 0 10px #ff4444; color: #ff6666; font-family: 'Share Tech Mono', monospace; display:flex; align-items:center; justify-content:space-between; gap:10px; }
+    .mensajes { flex: 1; overflow-y: auto; padding: 2rem; display: flex; flex-direction: column; gap: 1.4rem; scrollbar-width: thin; animation: fadeInUp 1s ease-out; }
+    .mensaje { max-width: 65%; padding: 0.6rem 0.9rem; border-radius: 12px; background-color: #2a0000; box-shadow: 0 0 10px rgba(255, 0, 0, 0.2); animation: mensajePop 0.4s ease-in-out both; word-wrap: break-word; font-size: 1rem; backdrop-filter: blur(3px); transition: transform 0.3s; }
+    .mensaje.izq { align-self: flex-start; background-color: #200000; border-left: 4px solid #aa0000; }
+    .mensaje.der { align-self: flex-end; background-color: #440000; border-right: 4px solid #ff5555; }
+    .sender { font-size: 0.75rem; color: #ffdede; opacity: 0.95; margin-bottom: 4px; font-family: 'Share Tech Mono', monospace; }
+    .placeholder { text-align: center; margin-top: 4rem; font-size: 1.3rem; color: #ff8888; opacity: 0.9; animation: fadeIn 1s ease-out both; }
+    .input-area-container { position: relative; display: flex; gap: 12px; padding: 14px; background: rgba(30, 0, 0, 0.6); border-top: 1px solid rgba(255, 0, 0, 0.2); backdrop-filter: blur(8px); box-shadow: 0 -2px 10px rgba(255, 0, 0, 0.2); transform: translateY(100%); opacity: 0; pointer-events: none; transition: all 0.4s ease; }
+    .input-area-container.visible { transform: translateY(0%); opacity: 1; pointer-events: auto; }
+    #inputMensaje { flex: 1; padding: 12px 16px; background: rgba(60, 0, 0, 0.8); color: #f8d7da; border: 1px solid rgba(255, 0, 0, 0.3); border-radius: 8px; font-size: 15px; resize: none; height: 46px; outline: none; transition: border 0.2s, background 0.2s; font-family: 'Share Tech Mono', monospace; }
+    .input-area-container button { padding: 12px 20px; background: linear-gradient(to right, #ff1f1f, #6e0000); color: white; font-weight: bold; border: none; border-radius: 6px; cursor: pointer; box-shadow: 0 2px 5px rgba(255, 0, 0, 0.4); transition: background 0.2s, transform 0.1s; font-family: 'Share Tech Mono', monospace; }
+    .modal { position: fixed; inset: 0; display:flex; align-items:center; justify-content:center; background: rgba(0,0,0,0.6); z-index: 9999; }
+    .modal .card { background: #160000; border: 1px solid #4a0000; padding: 18px; border-radius: 12px; width: 420px; max-width: 90%; color: #ffdede; }
+    .user-list { max-height: 300px; overflow:auto; margin-top:10px; display:flex; flex-direction:column; gap:6px; }
+    .user-item { display:flex; align-items:center; gap:8px; justify-content:space-between; padding:8px; border-radius:8px; background:rgba(255,255,255,0.02); }
+    .small { font-size:0.9rem; color:#ffbdbd; }
+    @keyframes mensajePop { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes fadeInUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes fadeInLeft { from { opacity: 0; transform: translateX(-50px); } to { opacity: 1; transform: translateX(0); } }
+  </style>
+</head>
+<body>
+
+  <button id="btnVolver" class="btn-back" title="Volver">← Volver</button>
+
+  <div class="sidebar">
+    <div class="header">
+      <span>🔥 Tus Invocaciones</span>
+      <button id="btnCreateGroup" title="Crear Grupo" class="btn-add">+</button>
+    </div>
+    <div class="chat-list" id="chatList">
+      <div class="placeholder">Invocando archivos JSON...</div>
+    </div>
+  </div>
+
+  <div class="main">
+    <div class="main-header" id="chatTitle">
+      <div id="chatTitleText">Selecciona un chat...</div>
+      <div class="actions" id="chatActions"></div>
+    </div>
+
+    <div class="mensajes" id="mensajesContenedor">
+      <div class="placeholder">Aquí se mostrará la conversación maldita.</div>
+    </div>
+
+    <div id="inputAreaContainer" class="input-area-container">
+      <textarea id="inputMensaje" placeholder="Escribe tu mensaje..."></textarea>
+      <button onclick="enviarMensaje()">Enviar</button>
+    </div>
+  </div>
+
+  <div id="modalRoot" style="display:none;"></div>
+
+  <script>
+  verificarID(() => {
+    const userId = sessionStorage.getItem('userId');
+    let datosChats = [];
+    let chatActual = null;
+    let usuariosGlobal = [];
+
+    const chatList = document.getElementById("chatList");
+    const mensajesContenedor = document.getElementById("mensajesContenedor");
+    const chatTitleText = document.getElementById("chatTitleText");
+    const chatActions = document.getElementById("chatActions");
+    const modalRoot = document.getElementById("modalRoot");
+    const btnVolver = document.getElementById('btnVolver');
+
+    btnVolver.addEventListener('click', () => {
+      if (window.history.length > 1) window.history.back();
+      else location.href = 'tienda.html';
+    });
+
+    const seenMessagesByChat = new Map();
+    let fetchingMessages = false;
+
+    document.getElementById('btnCreateGroup').addEventListener('click', showCreateGroupModal);
+
+    function cargarChats() {
+      return fetch('/obtener-chats', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId })
+      })
+      .then(async res => {
+        if (!res.ok) {
+          const text = await res.text().catch(()=>'<no body>');
+          console.error('Error HTTP /obtener-chats', res.status, text);
+          document.getElementById('chatList').innerHTML = `<div class="placeholder">Error servidor ${res.status}</div>`;
+          return { ok: false, chats: [] };
+        }
+        return res.json();
+      })
+      .then(data => {
+        if (!data) return { ok: false, chats: [] };
+        if (data.ok) {
+          datosChats = data.chats || [];
+          mostrarChats();
+          return { ok: true, chats: datosChats };
+        } else {
+          document.getElementById('chatList').innerHTML = `<div class="placeholder">Error: ${data.error}</div>`;
+          return { ok: false, chats: [] };
+        }
+      })
+      .catch(err => {
+        console.error("Error de red (cargarChats):", err);
+        return { ok: false, chats: [] };
+      });
+    }
+
+    function obtenerUsuariosCache() {
+      if (usuariosGlobal.length) return Promise.resolve(usuariosGlobal);
+      return fetch('/obtener-usuarios', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId })
+      })
+      .then(async r => {
+        if (!r.ok) {
+          const text = await r.text().catch(()=>'<no body>');
+          console.error('obtener-usuarios HTTP', r.status, text);
+          throw new Error(`HTTP ${r.status}: ${text}`);
+        }
+        return r.json();
+      })
+      .then(d => {
+        if (d && d.ok && Array.isArray(d.usuarios)) {
+          usuariosGlobal = d.usuarios;
+          return usuariosGlobal;
+        }
+        return [];
+      })
+      .catch(err => {
+        console.error("Error al obtener usuarios:", err);
+        return [];
+      });
+    }
+
+    function mostrarChats() {
+      chatList.innerHTML = "";
+      if (!datosChats || datosChats.length === 0) {
+        chatList.innerHTML = '<div class="placeholder">No hay chats aún.</div>';
+        return;
+      }
+
+      datosChats.forEach(chat => {
+        const item = document.createElement("div");
+        item.className = "chat-item";
+
+        const miembros = chat.miembros && Array.isArray(chat.miembros)
+                        ? chat.miembros
+                        : (typeof chat.chat === 'string' ? chat.chat.split(' - ').map(s=>s.trim()) : []);
+
+        const nombreVisible = chat.displayName || chat.chat || miembros.join(' - ');
+
+        const left = document.createElement('div');
+        left.style.display='flex';
+        left.style.flexDirection='column';
+        const title = document.createElement('div');
+        title.innerText = nombreVisible;
+        const meta = document.createElement('div');
+        meta.className='chat-meta';
+        meta.innerText = miembros.length >= 3 ? `Grupo · ${miembros.length} miembros` : `Chat · ${miembros.length} personas`;
+
+        left.appendChild(title);
+        left.appendChild(meta);
+
+        item.appendChild(left);
+
+        const right = document.createElement('div');
+        right.style.minWidth='70px';
+        right.style.textAlign='right';
+        const lastMsg = (chat.mensajes && chat.mensajes.length) ? chat.mensajes[chat.mensajes.length-1] : null;
+        if (lastMsg) {
+          const preview = document.createElement('div');
+          preview.className='small';
+          preview.innerText = (lastMsg.mensaje.length>24?lastMsg.mensaje.slice(0,24)+'…': lastMsg.mensaje);
+          right.appendChild(preview);
+        }
+        item.appendChild(right);
+
+        item.onclick = () => seleccionarChat(chat);
+        chatList.appendChild(item);
+      });
+    }
+
+    function seleccionarChat(chatObj) {
+      const inputArea = document.getElementById("inputAreaContainer");
+
+      const encontrado = datosChats.find(c => {
+        if (c.id && chatObj.id) return c.id === chatObj.id;
+        return (c.chat === chatObj.chat);
+      });
+
+      if (!encontrado) {
+        inputArea.classList.remove("visible");
+        return;
+      }
+
+      inputArea.classList.add("visible");
+      chatActual = encontrado;
+      const miembros = getMembers(chatActual);
+      chatTitleText.innerText = (chatActual.displayName || chatActual.chat || miembros.join(' - '));
+      mensajesContenedor.innerHTML = "";
+
+      renderChatActions(chatActual);
+
+      const chatKey = chatActual.id || chatActual.chat || getMembers(chatActual).join(' - ');
+      const setSeen = new Set();
+      (chatActual.mensajes || []).forEach((m, idx) => {
+        const key = buildMessageKey(m, idx);
+        setSeen.add(key);
+      });
+      seenMessagesByChat.set(chatKey, setSeen);
+
+      if (window.__intervalChat) clearInterval(window.__intervalChat);
+      actualizarMensajes(true);
+      window.__intervalChat = setInterval(() => actualizarMensajes(false), 1000);
+    }
+
+    function getMembers(chat) {
+      if (!chat) return [];
+      if (Array.isArray(chat.miembros) && chat.miembros.length) return chat.miembros;
+      if (typeof chat.chat === 'string') return chat.chat.split(' - ').map(s=>s.trim()).filter(Boolean);
+      return [];
+    }
+
+    function renderChatActions(chat) {
+      chatActions.innerHTML = '';
+      const miembros = getMembers(chat);
+      const btnAdd = document.createElement('button');
+      btnAdd.className = 'btn-add';
+      btnAdd.innerText = 'Añadir';
+      btnAdd.title = 'Añadir persona al chat (o convertir en grupo)';
+      btnAdd.onclick = (e) => { e.stopPropagation(); showAddMembersModal(chat); };
+      chatActions.appendChild(btnAdd);
+
+      if (miembros.length >= 3) {
+        const btnRename = document.createElement('button');
+        btnRename.className = 'btn-add';
+        btnRename.innerText = 'Renombrar';
+        btnRename.title = 'Cambiar nombre del grupo';
+        btnRename.onclick = (e) => { e.stopPropagation(); showRenameModal(chat); };
+        chatActions.appendChild(btnRename);
+      }
+    }
+
+    async function actualizarMensajes(forzarTodo = false) {
+      if (!chatActual) return;
+      if (fetchingMessages) return;
+      fetchingMessages = true;
+
+      try {
+        const res = await fetch('/obtener-chats', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userId })
+        });
+        const data = await res.json();
+        if (!data.ok) return;
+        const actualizado = data.chats.find(c => {
+          if (chatActual.id && c.id) return c.id === chatActual.id;
+          return c.chat === chatActual.chat;
+        });
+        if (!actualizado) return;
+
+        const nuevosMensajes = actualizado.mensajes || [];
+        const chatKey = actualizado.id || actualizado.chat || getMembers(actualizado).join(' - ');
+
+        if (forzarTodo) {
+          mensajesContenedor.innerHTML = "";
+          const setSeen = new Set();
+          nuevosMensajes.forEach((msg, idx) => {
+            const key = buildMessageKey(msg, idx);
+            setSeen.add(key);
+            const elem = crearMensajeElemento(msg, actualizado, key);
+            mensajesContenedor.appendChild(elem);
+          });
+          seenMessagesByChat.set(chatKey, setSeen);
+          mensajesContenedor.scrollTop = mensajesContenedor.scrollHeight;
+        } else {
+          const setSeen = seenMessagesByChat.get(chatKey) || new Set();
+          nuevosMensajes.forEach((msg, idx) => {
+            const key = buildMessageKey(msg, idx);
+            if (!setSeen.has(key)) {
+              setSeen.add(key);
+              const elem = crearMensajeElemento(msg, actualizado, key);
+              mensajesContenedor.appendChild(elem);
+              mensajesContenedor.scrollTop = mensajesContenedor.scrollHeight;
+            }
+          });
+          seenMessagesByChat.set(chatKey, setSeen);
+        }
+
+        chatActual = actualizado;
+      } catch (err) {
+        console.error("❌ Error al actualizar mensajes:", err);
+      } finally {
+        fetchingMessages = false;
+      }
+    }
+
+    function buildMessageKey(msg, idxFallback=0) {
+      const id = msg.id || msg._id || null;
+      const ts = msg.timestamp || msg.ts || msg.time || null;
+      if (id) return `id::${id}`;
+      if (ts) return `ts::${msg.de || 'x'}::${ts}::${hashString(msg.mensaje || '')}`;
+      return `fallback::${msg.de || 'x'}::${hashString(msg.mensaje || '')}::${idxFallback}`;
+    }
+
+    function hashString(s) {
+      let h = 0;
+      for (let i=0;i<s.length;i++){ h = ((h<<5)-h) + s.charCodeAt(i); h |= 0; }
+      return Math.abs(h).toString(36);
+    }
+
+    function crearMensajeElemento(msg, chatObj, key) {
+      const divWrap = document.createElement('div');
+      const miembros = getMembers(chatObj);
+
+      let nombreRemitente = msg.de;
+      if (Array.isArray(miembros) && miembros.length) {
+        const found = miembros.find(m => {
+          if (typeof m === 'object' && m.id) return m.id === msg.de;
+          return m === msg.de;
+        });
+        if (found) {
+          nombreRemitente = (typeof found === 'object' && found.nombre) ? found.nombre : (typeof found === 'string' ? found : msg.de);
+        } else {
+          const u = usuariosGlobal.find(x=> x.id === msg.de);
+          if (u) nombreRemitente = u.nombre || u.id;
+        }
+      } else {
+        const u = usuariosGlobal.find(x=> x.id === msg.de);
+        if (u) nombreRemitente = u.nombre || u.id;
+      }
+
+      const senderLabel = document.createElement('div');
+      senderLabel.className = 'sender';
+      senderLabel.innerText = nombreRemitente === userId ? 'Tú' : nombreRemitente;
+
+      const bubble = document.createElement('div');
+      bubble.className = 'mensaje';
+      bubble.classList.add('izq');
+      if (msg.de === userId) {
+        bubble.classList.remove('izq');
+        bubble.classList.add('der');
+      }
+      bubble.innerText = msg.mensaje;
+      if (key) bubble.dataset.msgkey = key;
+
+      divWrap.appendChild(senderLabel);
+      divWrap.appendChild(bubble);
+      return divWrap;
+    }
+
+    // ------------------------
+    // NUEVA FUNCIONALIDAD: extraer contactos con los que YA tienes chats
+    // ------------------------
+    function getContactsForUser() {
+      const contactosIds = new Set();
+      datosChats.forEach(chat => {
+        if (!Array.isArray(chat.miembros)) return;
+        if (chat.miembros.includes(userId)) {
+          chat.miembros.forEach(m => { if (m !== userId) contactosIds.add(m); });
+        }
+      });
+      const contactos = Array.from(contactosIds).map(id => {
+        const u = usuariosGlobal.find(x => x.id === id);
+        return { id, nombre: (u && (u.nombre || u.id)) || id };
+      }).sort((a,b) => a.nombre.localeCompare(b.nombre, 'es'));
+      return contactos;
+    }
+
+    // Modal helper
+    function openModal(htmlContent, onClose) {
+      modalRoot.style.display = 'block';
+      modalRoot.innerHTML = '';
+      const modal = document.createElement('div');
+      modal.className = 'modal';
+      modal.innerHTML = `<div class="card">${htmlContent}</div>`;
+      modalRoot.appendChild(modal);
+      modal.addEventListener('click', (e)=>{ if (e.target===modal) { closeModal(); if (onClose) onClose(); }});
+      return modalRoot.querySelector('.card');
+    }
+    function closeModal() { modalRoot.style.display='none'; modalRoot.innerHTML=''; }
+
+    // ---------- CREAR GRUPO: ahora solo muestra contactos ----------
+    function showCreateGroupModal() {
+      Promise.all([obtenerUsuariosCache(), cargarChats()]).then(() => {
+        const contactos = getContactsForUser();
+        const html = `
+          <h3>Crear Grupo</h3>
+          <label class="small">Nombre del grupo (opcional):</label>
+          <input id="newGroupName" style="width:100%;padding:8px;margin-top:6px;border-radius:6px;border:1px solid #4a0000;background:#110000;color:#ffdede" placeholder="Nombre del grupo...">
+          <div class="small" style="margin-top:10px">Selecciona usuarios (solo contactos con los que ya tienes chat):</div>
+          <div class="user-list" id="modalUserList"></div>
+          <div style="display:flex;gap:8px;margin-top:12px;justify-content:flex-end">
+            <button id="cancelCreate" class="btn-add">Cancelar</button>
+            <button id="confirmCreate" class="btn-add">Crear</button>
+          </div>
+        `;
+        const card = openModal(html);
+        const userList = card.querySelector('#modalUserList');
+
+        if (!contactos || contactos.length === 0) {
+          userList.innerHTML = '<div class="small">No tienes contactos de chat para crear un grupo.</div>';
+        } else {
+          contactos.forEach(u=> {
+            const item = document.createElement('label');
+            item.className='user-item';
+            item.innerHTML = `<span>${u.nombre}</span><input type="checkbox" data-uid="${u.id}">`;
+            userList.appendChild(item);
+          });
+        }
+
+        card.querySelector('#cancelCreate').onclick = () => closeModal();
+        card.querySelector('#confirmCreate').onclick = () => {
+          const selected = Array.from(userList.querySelectorAll('input[type=checkbox]:checked')).map(cb=>cb.dataset.uid);
+          if (selected.length === 0) { alert('Selecciona al menos a una persona para crear un grupo.'); return; }
+          const miembros = Array.from(new Set([userId, ...selected]));
+          const displayName = card.querySelector('#newGroupName').value.trim();
+
+          fetch('/crear-grupo', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ creador: userId, miembros, displayName })
+          })
+          .then(async res => {
+            if (!res.ok) {
+              const t = await res.text().catch(()=>'<no body>');
+              throw new Error(`HTTP ${res.status}: ${t}`);
+            }
+            return res.json();
+          })
+          .then(d => {
+            if (d.ok) {
+              closeModal();
+              cargarChats();
+            } else {
+              alert('Error al crear grupo: ' + (d.error || 'error'));
+            }
+          })
+          .catch(err=>{
+            console.error('Error crear grupo', err);
+            alert('Error de red al crear grupo.');
+          });
+        };
+      });
+    }
+
+    // ---------- AÑADIR MIEMBROS: ahora solo muestra contactos con los que ya tienes chats y que no estén ya en el chat ----------
+    function showAddMembersModal(chat) {
+      Promise.all([obtenerUsuariosCache(), cargarChats()]).then(() => {
+        const miembrosActuales = getMembers(chat);
+        const contactos = getContactsForUser();
+        const disponibles = contactos.filter(c => !miembrosActuales.includes(c.id));
+        const html = `
+          <h3>Añadir Personas</h3>
+          <div class="small">Selecciona usuarios para añadir al chat (solo contactos):</div>
+          <div class="user-list" id="addUserList"></div>
+          <div style="display:flex;gap:8px;margin-top:12px;justify-content:flex-end">
+            <button id="cancelAdd" class="btn-add">Cancelar</button>
+            <button id="confirmAdd" class="btn-add">Añadir</button>
+          </div>
+        `;
+        const card = openModal(html);
+        const list = card.querySelector('#addUserList');
+
+        if (!disponibles || disponibles.length === 0) {
+          list.innerHTML = '<div class="small">No hay contactos disponibles para añadir a este chat.</div>';
+        } else {
+          disponibles.forEach(u => {
+            const item = document.createElement('label');
+            item.className='user-item';
+            item.innerHTML = `<span>${u.nombre}</span><input type="checkbox" data-uid="${u.id}">`;
+            list.appendChild(item);
+          });
+        }
+
+        card.querySelector('#cancelAdd').onclick = () => closeModal();
+        card.querySelector('#confirmAdd').onclick = () => {
+          const toAdd = Array.from(list.querySelectorAll('input[type=checkbox]:checked')).map(cb=>cb.dataset.uid);
+          if (toAdd.length === 0) { alert('Selecciona al menos una persona.'); return; }
+
+          const chatKey = chat.id || chat.chat || miembrosActuales.join(' - ');
+
+          // <<--- NOTE: ruta sin acento aqui: /anadir-miembros
+          fetch('/anadir-miembros', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ usuario: userId, chatKey, nuevosMiembros: toAdd })
+          })
+          .then(async res => {
+            if (!res.ok) {
+              const t = await res.text().catch(()=>'<no body>');
+              throw new Error(`HTTP ${res.status}: ${t}`);
+            }
+            return res.json();
+          })
+          .then(d => {
+            if (d.ok) {
+              closeModal();
+              cargarChats();
+              setTimeout(()=> {
+                const seleccionado = datosChats.find(c => (chat.id && c.id===chat.id) || c.chat===chat.chat);
+                if (seleccionado) seleccionarChat(seleccionado);
+              }, 450);
+            } else {
+              alert('Error al añadir: ' + (d.error || 'error'));
+            }
+          })
+          .catch(err => { console.error(err); alert('Error de red.'); });
+        };
+      });
+    }
+
+    function showRenameModal(chat) {
+      const html = `
+        <h3>Renombrar Grupo</h3>
+        <label class="small">Nuevo nombre:</label>
+        <input id="renameInput" style="width:100%;padding:8px;margin-top:6px;border-radius:6px;border:1px solid #4a0000;background:#110000;color:#ffdede" placeholder="Nombre del grupo...">
+        <div style="display:flex;gap:8px;margin-top:12px;justify-content:flex-end">
+          <button id="cancelRename" class="btn-add">Cancelar</button>
+          <button id="confirmRename" class="btn-add">Guardar</button>
+        </div>
+      `;
+      const card = openModal(html);
+      card.querySelector('#renameInput').value = chat.displayName || chat.chat || '';
+      card.querySelector('#cancelRename').onclick = () => closeModal();
+      card.querySelector('#confirmRename').onclick = () => {
+        const nuevo = card.querySelector('#renameInput').value.trim();
+        if (!nuevo) { alert('El nombre no puede estar vacío'); return; }
+
+        const chatKey = chat.id || chat.chat || getMembers(chat).join(' - ');
+        fetch('/renombrar-grupo', {
+          method:'POST',
+          headers: {'Content-Type':'application/json'},
+          body: JSON.stringify({ usuario: userId, chatKey, nuevoNombre: nuevo })
+        })
+        .then(async res => {
+          if (!res.ok) {
+            const t = await res.text().catch(()=>'<no body>');
+            throw new Error(`HTTP ${res.status}: ${t}`);
+          }
+          return res.json();
+        })
+        .then(d=>{
+          if (d.ok) {
+            closeModal();
+            chat.displayName = nuevo;
+            chatTitleText.innerText = nuevo;
+            mostrarChats();
+          } else {
+            alert('Error renombrando: ' + (d.error || 'error'));
+          }
+        })
+        .catch(err => { console.error(err); alert('Error de red.'); });
+      };
+    }
+
+    window.enviarMensaje = function() {
+      const input = document.getElementById("inputMensaje");
+      const texto = input.value.trim();
+      if (!texto || !chatActual) return;
+
+      const nuevoMensaje = { de: userId, mensaje: texto, timestamp: Date.now() };
+      const chatKey = chatActual.id || chatActual.chat || getMembers(chatActual).join(' - ');
+      const localKey = buildMessageKey(nuevoMensaje, (chatActual.mensajes ? chatActual.mensajes.length : 0));
+      const s = seenMessagesByChat.get(chatKey) || new Set();
+      s.add(localKey); seenMessagesByChat.set(chatKey, s);
+
+      const elem = crearMensajeElemento(nuevoMensaje, chatActual, localKey);
+      mensajesContenedor.appendChild(elem);
+      mensajesContenedor.scrollTop = mensajesContenedor.scrollHeight;
+      input.value = "";
+
+      fetch('/guardar-mensaje', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ chatId: chatActual.id, de: userId, mensaje: texto })
+      })
+      .then(async res => {
+        if (!res.ok) {
+          const t = await res.text().catch(()=>'<no body>');
+          throw new Error(`HTTP ${res.status}: ${t}`);
+        }
+        return res.json();
+      })
+      .then(data => {
+        if (!data.ok) {
+          alert("Error al guardar el mensaje: " + (data.error || 'error'));
+          const s2 = seenMessagesByChat.get(chatKey) || new Set();
+          s2.delete(localKey);
+          seenMessagesByChat.set(chatKey, s2);
+          setTimeout(() => actualizarMensajes(true), 300);
+        } else {
+          setTimeout(() => actualizarMensajes(true), 300);
+        }
+      })
+      .catch(err => {
+        console.error("Error al guardar mensaje:", err);
+        const s2 = seenMessagesByChat.get(chatKey) || new Set();
+        s2.delete(localKey);
+        seenMessagesByChat.set(chatKey, s2);
+      });
+    };
+
+    // inicio: cargar usuarios y chats
+    obtenerUsuariosCache().then(()=>{ /* cache listo */ });
+    cargarChats();
+
+    window._cargarChats = cargarChats;
+    window._seen = seenMessagesByChat;
+  });
+  </script>
+
+</body>
+</html>
