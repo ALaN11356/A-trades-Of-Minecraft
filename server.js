@@ -1,298 +1,258 @@
-// server.js - versión corregida (copia completa)
+// server.js - parcheado para gestión de sesiones, usuarios, artículos, chats y admin
 const express = require('express');
 const fs = require('fs');
 const path = require('path');
 const multer = require('multer');
 const http = require('http');
 const { Server } = require('socket.io');
+const cookieParser = require('cookie-parser');
+const crypto = require('crypto');
 
+const APP_ROOT = __dirname;
+const DATA_DIR = APP_ROOT;
+const IDS_PATH = path.join(APP_ROOT, 'ids.txt');
+const ART_PATH = path.join(APP_ROOT, 'articulos.json');
+const CHATS_PATH = path.join(APP_ROOT, 'datos', 'chats.json');
+const UPLOADS_DIR = path.join(APP_ROOT, 'public', 'uploads');
+
+if (!fs.existsSync(UPLOADS_DIR)) fs.mkdirSync(UPLOADS_DIR, { recursive: true });
+
+const upload = multer({ dest: UPLOADS_DIR });
 const app = express();
 const server = http.createServer(app);
-const io = new Server(server, { cors: { origin: "*" } });
-const PORT = 3000;
+const io = new Server(server, { cors: { origin: true } });
+const PORT = process.env.PORT || 3000;
 
-// Middlewares
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser());
+app.use(express.static(path.join(APP_ROOT, 'public')));
 
-// Public
-const PUBLIC_DIR = path.join(__dirname, 'public');
-app.use(express.static(PUBLIC_DIR));
+// In-memory sessions map: sid -> { id, isAdmin }
+const sessions = new Map();
+const ADMINS = new Set(['ucosuc113','porcat']); // configurar admins aquí
 
-// Ficheros / carpetas necesarias
-const DATOS_DIR = path.join(__dirname, 'datos');
-if (!fs.existsSync(DATOS_DIR)) fs.mkdirSync(DATOS_DIR, { recursive: true });
-
-const ARCHIVO_CHATS = path.join(DATOS_DIR, 'chats.json');
-if (!fs.existsSync(ARCHIVO_CHATS)) fs.writeFileSync(ARCHIVO_CHATS, JSON.stringify({ chats: [] }, null, 2), 'utf8');
-
-const ARCHIVO_ARTICULOS = path.join(__dirname, 'articulos.json');
-if (!fs.existsSync(ARCHIVO_ARTICULOS)) fs.writeFileSync(ARCHIVO_ARTICULOS, JSON.stringify([], null, 2), 'utf8');
-
-const RUTA_IDS = path.join(__dirname, 'ids.txt');
-
-// Multer para uploads
-const UPLOADS = path.join(PUBLIC_DIR, 'uploads');
-if (!fs.existsSync(UPLOADS)) fs.mkdirSync(UPLOADS, { recursive: true });
-
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, UPLOADS),
-  filename: (req, file, cb) => {
-    const safe = file.originalname.replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_\.\-]/g, '');
-    cb(null, `${Date.now()}-${safe}`);
-  }
-});
-const upload = multer({ storage });
-
-// Util: leer/guardar chats
-function leerChats() {
+function readJSONSafe(filePath, fallback) {
   try {
-    const raw = fs.readFileSync(ARCHIVO_CHATS, 'utf8');
-    const parsed = JSON.parse(raw);
-    return (parsed && Array.isArray(parsed.chats)) ? parsed : { chats: [] };
-  } catch (err) {
-    console.warn('leerChats: error, devolviendo {chats:[]}', err);
-    return { chats: [] };
+    const raw = fs.readFileSync(filePath, 'utf8');
+    return JSON.parse(raw);
+  } catch (e) {
+    return fallback;
   }
 }
-function guardarChats(data) {
-  fs.writeFileSync(ARCHIVO_CHATS, JSON.stringify(data, null, 2), 'utf8');
+
+function writeJSONSafe(filePath, obj) {
+  fs.writeFileSync(filePath, JSON.stringify(obj, null, 2), 'utf8');
 }
 
-// --- rutas útiles ---
-app.get('/favicon.ico', (req, res) => {
-  const f = path.join(PUBLIC_DIR, 'favicon.ico');
-  if (fs.existsSync(f)) return res.sendFile(f);
-  return res.status(204).end();
-});
-
-// Devuelve lista de artículos
-app.get('/articulos', (req, res) => {
+// Load users from ids.txt (it's a JSON array)
+function loadUsers() {
   try {
-    if (!fs.existsSync(ARCHIVO_ARTICULOS)) {
-      fs.writeFileSync(ARCHIVO_ARTICULOS, JSON.stringify([], null, 2), 'utf8');
-      return res.json([]);
-    }
-    const raw = fs.readFileSync(ARCHIVO_ARTICULOS, 'utf8');
-    const datos = JSON.parse(raw);
-    return res.json(Array.isArray(datos) ? datos : []);
-  } catch (err) {
-    console.error('/articulos error', err);
-    return res.status(500).json({ error: 'Error al cargar artículos' });
+    const raw = fs.readFileSync(IDS_PATH, 'utf8');
+    return JSON.parse(raw);
+  } catch (e) {
+    return [];
   }
-});
+}
 
-// Verificar id
-app.post('/verificar-id', (req, res) => {
-  try {
-    if (!req.body || typeof req.body.id !== 'string') return res.status(400).json({ acceso: false, mensaje: 'ID inválida (formato).' });
-    if (!fs.existsSync(RUTA_IDS)) return res.status(500).json({ acceso: false, mensaje: 'Archivo de IDs no encontrado.' });
-    const raw = fs.readFileSync(RUTA_IDS, 'utf8');
-    const lista = JSON.parse(raw);
-    if (!Array.isArray(lista)) return res.status(500).json({ acceso: false, mensaje: 'Formato interno incorrecto.' });
-    const existe = lista.some(u => u.id === req.body.id.trim());
-    return res.json({ acceso: !!existe });
-  } catch (err) {
-    console.error('/verificar-id', err);
-    return res.status(500).json({ acceso: false, mensaje: 'Error interno' });
-  }
-});
+function saveUsers(users) {
+  fs.writeFileSync(IDS_PATH, JSON.stringify(users, null, 2), 'utf8');
+}
 
-// Verificar acceso (id + contraseña)
-app.post('/verificar-acceso', (req, res) => {
-  try {
-    const { id, password } = req.body;
-    if (!id || !password) return res.status(400).json({ acceso: false, mensaje: 'Faltan campos.' });
-    if (!fs.existsSync(RUTA_IDS)) return res.status(500).json({ acceso: false, mensaje: 'Archivo de IDs no encontrado.' });
-    const raw = fs.readFileSync(RUTA_IDS, 'utf8');
-    const usuarios = JSON.parse(raw);
-    if (!Array.isArray(usuarios)) return res.status(500).json({ acceso: false, mensaje: 'Formato ids.txt inválido' });
-    const coincide = usuarios.find(u => u.id === id.trim() && u.contraseña === password.trim());
-    return res.json({ acceso: !!coincide, mensaje: coincide ? undefined : 'ID o contraseña incorrectos.' });
-  } catch (err) {
-    console.error('/verificar-acceso', err);
-    return res.status(500).json({ acceso: false, mensaje: 'Error interno' });
-  }
-});
+// Simple auth helpers
+function createSession(userId) {
+  const sid = crypto.randomBytes(18).toString('hex');
+  const isAdmin = ADMINS.has(userId);
+  sessions.set(sid, { id: userId, isAdmin, created: Date.now() });
+  return { sid, isAdmin };
+}
 
-// Obtener usuarios (lista pública desde ids.txt)
-app.post('/obtener-usuarios', (req, res) => {
-  try {
-    if (!fs.existsSync(RUTA_IDS)) return res.json({ ok: true, usuarios: [] });
-    const raw = fs.readFileSync(RUTA_IDS, 'utf8');
-    const usuarios = JSON.parse(raw);
-    if (!Array.isArray(usuarios)) return res.status(500).json({ ok: false, error: 'Formato de usuarios inválido' });
-    const listaPublica = usuarios.map(u => ({ id: u.id, nombre: u.nombre || u.displayName || u.id }));
-    return res.json({ ok: true, usuarios: listaPublica });
-  } catch (err) {
-    console.error('/obtener-usuarios', err);
-    return res.status(500).json({ ok: false, error: 'Error interno' });
-  }
-});
-app.get('/obtener-usuarios', (req, res) => res.status(405).json({ ok: false, error: 'Usa POST' }));
+function getSession(req) {
+  const sid = req.cookies && req.cookies.sid;
+  if (!sid) return null;
+  return sessions.get(sid) || null;
+}
 
-// Obtener chats de un usuario
-app.post('/obtener-chats', (req, res) => {
-  try {
-    const { userId } = req.body;
-    if (!userId || typeof userId !== 'string') return res.status(400).json({ ok: false, error: "userId faltante o inválido" });
-    const data = leerChats();
-    const propios = data.chats.filter(c => Array.isArray(c.miembros) && c.miembros.includes(userId));
-    return res.json({ ok: true, chats: propios });
-  } catch (err) {
-    console.error('/obtener-chats', err);
-    return res.status(500).json({ ok: false, error: 'Error interno' });
-  }
-});
+function requireAuth(req, res, next) {
+  const ses = getSession(req);
+  if (!ses) return res.status(401).json({ ok: false, error: 'No auth' });
+  req.session = ses;
+  next();
+}
 
-// Crear-grupo (simple)
-app.post('/crear-grupo', (req, res) => {
-  try {
-    const { creador, miembros, displayName } = req.body;
-    if (!creador || !Array.isArray(miembros) || miembros.length === 0) return res.status(400).json({ ok: false, error: 'Faltan campos' });
-    const data = leerChats();
-    const miembrosUnicos = Array.from(new Set([creador, ...miembros]));
-    const id = `chat-${miembrosUnicos.join('-')}-${Date.now()}`;
-    const nuevoChat = { id, chat: miembrosUnicos.join(' - '), displayName: displayName || `${miembrosUnicos[0]} & ${miembrosUnicos.slice(1).join(', ')}`, miembros: miembrosUnicos, mensajes: [{ id: `m${Date.now()}`, de: creador, mensaje: 'Grupo creado', timestamp: Date.now() }] };
-    data.chats.push(nuevoChat);
-    guardarChats(data);
-    return res.json({ ok: true, chat: nuevoChat });
-  } catch (err) {
-    console.error('/crear-grupo', err);
-    return res.status(500).json({ ok: false, error: 'Error interno' });
-  }
-});
-
-// Añadir miembros (POST /anadir-miembros) - nota: sin ñ en URL
-app.post('/anadir-miembros', (req, res) => {
-  try {
-    const { usuario, chatKey, nuevosMiembros } = req.body;
-    if (!usuario || !chatKey || !Array.isArray(nuevosMiembros) || nuevosMiembros.length === 0) return res.status(400).json({ ok: false, error: 'Faltan campos' });
-    const data = leerChats();
-    let chat = data.chats.find(c => c.id === chatKey || c.chat === chatKey);
-    if (!chat) return res.status(404).json({ ok: false, error: 'Chat no encontrado' });
-    if (!chat.miembros.includes(usuario)) return res.status(403).json({ ok: false, error: 'No autorizado' });
-    const nuevos = nuevosMiembros.filter(m => !chat.miembros.includes(m));
-    if (nuevos.length === 0) return res.json({ ok: true, message: 'No hay miembros nuevos para añadir' });
-    chat.miembros = Array.from(new Set([...chat.miembros, ...nuevos]));
-    chat.mensajes.push({ id: `m${Date.now()}`, de: 'system', mensaje: `Se añadieron: ${nuevos.join(', ')}`, timestamp: Date.now() });
-    guardarChats(data);
-    return res.json({ ok: true, añadidos: nuevos, chat });
-  } catch (err) {
-    console.error('/anadir-miembros', err);
-    return res.status(500).json({ ok: false, error: 'Error interno' });
-  }
-});
-
-// RENOMBRAR GRUPO (esta es la ruta que te da 404)
-app.post('/renombrar-grupo', (req, res) => {
-  try {
-    const { usuario, chatKey, nuevoNombre } = req.body;
-    if (!usuario || !chatKey || !nuevoNombre) return res.status(400).json({ ok: false, error: 'Faltan campos' });
-    const data = leerChats();
-    const chat = data.chats.find(c => c.id === chatKey || c.chat === chatKey);
-    if (!chat) return res.status(404).json({ ok: false, error: 'Chat no encontrado' });
-    if (!chat.miembros.includes(usuario)) return res.status(403).json({ ok: false, error: 'No autorizado' });
-    chat.displayName = nuevoNombre;
-    guardarChats(data);
-    return res.json({ ok: true, chat });
-  } catch (err) {
-    console.error('/renombrar-grupo', err);
-    return res.status(500).json({ ok: false, error: 'Error interno' });
-  }
-});
-
-// Guardar mensaje (fallback sin socket)
-app.post('/guardar-mensaje', (req, res) => {
-  try {
-    let chatId = req.body.chatId || req.body.chat || req.body.chatKey || req.body.chat_id;
-    let mensaje = req.body.mensaje;
-    const usuario = req.body.usuario;
-    const de = req.body.de;
-    if (!mensaje && req.body.text) mensaje = req.body.text;
-    if (typeof mensaje === 'string') mensaje = { de: de || usuario || 'unknown', mensaje: mensaje, timestamp: Date.now() };
-    if (mensaje && typeof mensaje === 'object') {
-      if (!mensaje.de) mensaje.de = de || usuario || 'unknown';
-      if (!mensaje.timestamp) mensaje.timestamp = Date.now();
-    }
-    if (!chatId || !mensaje || !mensaje.de || !mensaje.mensaje) return res.status(400).json({ ok: false, error: 'Faltan datos' });
-    const data = leerChats();
-    let chatObj = data.chats.find(c => c.id === chatId);
-    if (!chatObj) chatObj = data.chats.find(c => c.chat === chatId || c.id === (chatId.id || ''));
-    if (!chatObj) return res.status(404).json({ ok: false, error: 'Chat no encontrado' });
-    chatObj.mensajes.push({ id: `m${Date.now()}`, de: mensaje.de, mensaje: mensaje.mensaje, timestamp: mensaje.timestamp || Date.now() });
-    guardarChats(data);
-    return res.json({ ok: true });
-  } catch (err) {
-    console.error('/guardar-mensaje', err);
-    return res.status(500).json({ ok: false, error: 'Error interno' });
-  }
-});
-
-// Guardar artículo (multipart o json)
-app.post('/guardar-articulo', upload.single('imagen'), (req, res) => {
-  try {
-    const { body, file } = req;
-    const titulo = body.titulo || body.title || 'Sin título';
-    const descripcion = body.descripcion || body.description || '';
-    const precio = body.precio ? Number(body.precio) : (body.price ? Number(body.price) : null);
-    let nombreImagen = null;
-    if (file && file.filename) nombreImagen = path.basename(file.filename);
-    else if (body.imagen) nombreImagen = body.imagen;
-    let articulos = [];
-    try {
-      const raw = fs.readFileSync(ARCHIVO_ARTICULOS, 'utf8');
-      articulos = JSON.parse(raw);
-      if (!Array.isArray(articulos)) articulos = [];
-    } catch (e) { articulos = []; }
-    const nuevo = { id: `art-${Date.now()}`, titulo, descripcion, precio: (precio !== null && !isNaN(precio) ? precio : null), imagen: nombreImagen, timestamp: Date.now() };
-    articulos.push(nuevo);
-    fs.writeFileSync(ARCHIVO_ARTICULOS, JSON.stringify(articulos, null, 2), 'utf8');
-    return res.json({ ok: true, articulo: nuevo });
-  } catch (err) {
-    console.error('/guardar-articulo', err);
-    return res.status(500).json({ ok: false, error: 'Error interno al guardar artículo' });
-  }
-});
-
-// Endpoint diagnóstico: lista todas las rutas registradas
-app.get('/__routes', (req, res) => {
-  try {
-    const routes = [];
-    app._router.stack.forEach(m => {
-      if (m.route && m.route.path) {
-        routes.push({ path: m.route.path, methods: Object.keys(m.route.methods) });
-      }
-    });
-    return res.json({ ok: true, routes });
-  } catch (err) {
-    return res.status(500).json({ ok: false, error: 'No pude listar rutas' });
-  }
-});
-
-// socket.io (opcional)
-io.on('connection', socket => {
-  console.log('[socket] conectado', socket.id);
-  socket.on('joinChat', ({ chatId }) => socket.join(chatId));
-  socket.on('nuevoMensaje', ({ chatId, mensaje }) => {
-    const data = leerChats();
-    let chat = data.chats.find(c => c.id === chatId);
-    if (!chat) return;
-    chat.mensajes.push({ id: `m${Date.now()}`, de: mensaje.de, mensaje: mensaje.mensaje, timestamp: mensaje.timestamp || Date.now() });
-    guardarChats(data);
-    io.to(chatId).emit('recibirMensaje', mensaje);
+function requireAdmin(req, res, next) {
+  requireAuth(req, res, () => {
+    if (!req.session.isAdmin) return res.status(403).json({ ok: false, error: 'Admin only' });
+    next();
   });
-  socket.on('disconnect', () => console.log('[socket] desconectado', socket.id));
+}
+
+// Login endpoint: expects { id, contraseña }
+app.post('/api/login', (req, res) => {
+  const { id, contraseña } = req.body;
+  if (!id || !contraseña) return res.status(400).json({ ok: false, error: 'Missing' });
+  const users = loadUsers();
+  const found = users.find(u => u.id === id && u.contraseña === contraseña);
+  if (!found) return res.status(401).json({ ok: false, error: 'Invalid credentials' });
+  const { sid, isAdmin } = createSession(id);
+  res.cookie('sid', sid, { httpOnly: true });
+  res.json({ ok: true, id, isAdmin });
 });
 
-
-// Fallback para peticiones no encontradas: devolver JSON si el cliente acepta JSON
-app.use((req, res) => {
-  if (req.accepts('json')) return res.status(404).json({ ok: false, error: 'Not found' });
-  return res.status(404).type('txt').send('Not found');
+app.post('/api/logout', (req, res) => {
+  const sid = req.cookies && req.cookies.sid;
+  if (sid) sessions.delete(sid);
+  res.clearCookie('sid');
+  res.json({ ok: true });
 });
 
-// Start
+app.get('/api/session', (req, res) => {
+  const ses = getSession(req);
+  if (!ses) return res.json({ ok: false });
+  res.json({ ok: true, id: ses.id, isAdmin: ses.isAdmin });
+});
+
+// Articles APIs
+app.get('/api/articles', (req, res) => {
+  const arts = readJSONSafe(ART_PATH, []);
+  res.json(arts);
+});
+
+app.post('/api/articles', requireAuth, upload.single('imagen'), (req, res) => {
+  const body = req.body;
+  const arts = readJSONSafe(ART_PATH, []);
+  const nueva = {
+    imagen: req.file ? path.basename(req.file.path) : body.imagen || '',
+    nombre: body.nombre || 'Sin nombre',
+    precio: body.precio || '0',
+    descripcion: body.descripcion || '',
+    version: body.version || '',
+    servidor: body.servidor || '',
+    vendedor: req.session.id
+  };
+  arts.push(nueva);
+  writeJSONSafe(ART_PATH, arts);
+  res.json({ ok: true, articulo: nueva });
+});
+
+app.put('/api/articles/:index', requireAuth, upload.single('imagen'), (req, res) => {
+  const idx = Number(req.params.index);
+  const arts = readJSONSafe(ART_PATH, []);
+  if (Number.isNaN(idx) || idx < 0 || idx >= arts.length) return res.status(404).json({ ok: false, error: 'Not found' });
+  const art = arts[idx];
+  // Only owner or admin can edit
+  if (art.vendedor !== req.session.id && !req.session.isAdmin) return res.status(403).json({ ok: false, error: 'Forbidden' });
+  const b = req.body;
+  art.nombre = b.nombre || art.nombre;
+  art.precio = b.precio || art.precio;
+  art.descripcion = b.descripcion || art.descripcion;
+  art.version = b.version || art.version;
+  art.servidor = b.servidor || art.servidor;
+  if (req.file) art.imagen = path.basename(req.file.path);
+  writeJSONSafe(ART_PATH, arts);
+  res.json({ ok: true, articulo: art });
+});
+
+app.delete('/api/articles/:index', requireAuth, (req, res) => {
+  const idx = Number(req.params.index);
+  const arts = readJSONSafe(ART_PATH, []);
+  if (Number.isNaN(idx) || idx < 0 || idx >= arts.length) return res.status(404).json({ ok: false, error: 'Not found' });
+  const art = arts[idx];
+  if (art.vendedor !== req.session.id && !req.session.isAdmin) return res.status(403).json({ ok: false, error: 'Forbidden' });
+  arts.splice(idx, 1);
+  writeJSONSafe(ART_PATH, arts);
+  res.json({ ok: true });
+});
+
+// User management (admin)
+app.get('/api/users', requireAdmin, (req, res) => {
+  const users = loadUsers();
+  res.json(users.map(u => ({ id: u.id }))); // no passwords by default
+});
+
+app.post('/api/users', requireAdmin, (req, res) => {
+  const { id, contraseña } = req.body;
+  if (!id || !contraseña) return res.status(400).json({ ok: false, error: 'Missing' });
+  const users = loadUsers();
+  if (users.find(u => u.id === id)) return res.status(400).json({ ok: false, error: 'Exists' });
+  users.push({ id, contraseña });
+  saveUsers(users);
+  // Append to file in case other processes read lines (keeps file atomic by rewriting entire file)
+  res.json({ ok: true });
+});
+
+app.put('/api/users/:id', requireAdmin, (req, res) => {
+  const target = req.params.id;
+  const { contraseña } = req.body;
+  const users = loadUsers();
+  const u = users.find(x => x.id === target);
+  if (!u) return res.status(404).json({ ok: false, error: 'Not found' });
+  if (contraseña) u.contraseña = contraseña;
+  saveUsers(users);
+  res.json({ ok: true });
+});
+
+app.delete('/api/users/:id', requireAdmin, (req, res) => {
+  const target = req.params.id;
+  let users = loadUsers();
+  users = users.filter(u => u.id !== target);
+  saveUsers(users);
+  res.json({ ok: true });
+});
+
+// Chats: list and create group
+app.get('/api/chats', requireAuth, (req, res) => {
+  const chats = readJSONSafe(CHATS_PATH, { chats: [] });
+  res.json(chats);
+});
+
+app.post('/api/chats', requireAuth, (req, res) => {
+  const { miembros, displayName } = req.body;
+  if (!Array.isArray(miembros) || miembros.length < 2) return res.status(400).json({ ok: false, error: 'Need at least 2 miembros' });
+  // validate members exist
+  const users = loadUsers();
+  const allIds = new Set(users.map(u => u.id));
+  for (const m of miembros) if (!allIds.has(m)) return res.status(400).json({ ok: false, error: `Usuario no encontrado: ${m}` });
+  const chatsData = readJSONSafe(CHATS_PATH, { chats: [] });
+  // create unique id
+  const newId = 'chat-' + Date.now() + '-' + Math.floor(Math.random()*9999);
+  const chatObj = { id: newId, chat: miembros.join(' - '), displayName: displayName || miembros.join(' & '), miembros, mensajes: [] };
+  chatsData.chats.push(chatObj);
+  writeJSONSafe(CHATS_PATH, chatsData);
+  res.json({ ok: true, chat: chatObj });
+});
+
+// Profile image upload
+app.post('/api/profile', requireAuth, upload.single('foto'), (req, res) => {
+  if (!req.file) return res.status(400).json({ ok: false, error: 'No file' });
+  // Optionally, save a mapping user -> filename in a simple JSON
+  const mapPath = path.join(APP_ROOT, 'datos', 'profiles.json');
+  const map = readJSONSafe(mapPath, {});
+  map[req.session.id] = path.basename(req.file.path);
+  writeJSONSafe(mapPath, map);
+  res.json({ ok: true, file: map[req.session.id] });
+});
+
+// Get profile image
+app.get('/api/profile/:id', (req, res) => {
+  const mapPath = path.join(APP_ROOT, 'datos', 'profiles.json');
+  const map = readJSONSafe(mapPath, {});
+  const fn = map[req.params.id];
+  if (!fn) return res.status(404).json({ ok: false, error: 'Not found' });
+  res.sendFile(path.join(UPLOADS_DIR, fn));
+});
+
+// Start server
 server.listen(PORT, () => {
   console.log(`Servidor escuchando en http://localhost:${PORT}`);
+});
+
+// Socket.IO basic relay for chats (opcional: mejora incremental)
+io.on('connection', socket => {
+  console.log('socket connected', socket.id);
+  socket.on('join', room => socket.join(room));
+  socket.on('msg', data => {
+    // data: { room, mensaje, de }
+    if (data && data.room) io.to(data.room).emit('msg', data);
+  });
 });

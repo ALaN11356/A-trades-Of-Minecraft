@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <title>Admin - Tienda Infernal</title>
+  <link href="https://fonts.googleapis.com/css2?family=UnifrakturCook:wght@700&display=swap" rel="stylesheet">
+  <style>
+    body{font-family:'UnifrakturCook',cursive;background:radial-gradient(circle,#000,#120000);color:#ff6666;padding:24px}
+    .card{background:rgba(0,0,0,0.6);padding:20px;border-radius:12px}
+    table{width:100%;border-collapse:collapse}
+    td,th{padding:8px;border-bottom:1px solid rgba(255,0,0,0.06)}
+    input,button{margin-top:8px}
+  </style>
+</head>
+<body>
+  <h1>Panel administrativo</h1>
+  <a href="tienda.html">↩ Volver</a>
+  <div class="card">
+    <h3>Usuarios</h3>
+    <div>
+      <input id="newId" placeholder="id" /> <input id="newPass" placeholder="contraseña" />
+      <button id="createUser">Crear usuario</button>
+    </div>
+    <div id="usersList"></div>
+  </div>
+  <div class="card" style="margin-top:12px">
+    <h3>Artículos</h3>
+    <div id="artList"></div>
+  </div>
+  <script src="app.js"></script>
+  <script>
+    async function init(){
+      const sess = await getSession();
+      if(!sess.ok || !sess.isAdmin) return alert('Acceso denegado');
+      const ul = document.getElementById('usersList');
+      const users = await (await fetch('/api/users')).json();
+      ul.innerHTML = '<ul>'+users.map(u=>`<li>${u.id} <button data-id="${u.id}" class="del">Borrar</button></li>`).join('')+'</ul>';
+      document.querySelectorAll('.del').forEach(b=>b.addEventListener('click', async (ev)=>{
+        const id = ev.target.dataset.id; if(!confirm('Borrar '+id+' ?')) return;
+        await fetch('/api/users/'+encodeURIComponent(id), { method:'DELETE' }); location.reload();
+      }));
+      // articles
+      const arts = await (await fetch('/api/articles')).json();
+      const artWrap = document.getElementById('artList');
+      artWrap.innerHTML = arts.map((a,i)=>`<div><strong>${a.nombre}</strong> — ${a.vendedor} <button data-i="${i}" class="delArt">Borrar</button></div>`).join('');
+      document.querySelectorAll('.delArt').forEach(b=>b.addEventListener('click', async (ev)=>{
+        const i = ev.target.dataset.i; if(!confirm('Borrar artículo?')) return;
+        await fetch('/api/articles/'+i, { method:'DELETE' }); location.reload();
+      }));
+
+      document.getElementById('createUser').addEventListener('click', async ()=>{
+        const id = document.getElementById('newId').value.trim();
+        const contraseña = document.getElementById('newPass').value.trim();
+        if(!id||!contraseña) return alert('rellena');
+        const r = await fetch('/api/users', { method:'POST', headers:{'content-type':'application/json'}, body: JSON.stringify({id,contraseña}) });
+        const j = await r.json(); if(j.ok) location.reload(); else alert('error: '+(j.error||'')); 
+      });
+    }
+    init();
+  </script>
+</body>
+</html>
