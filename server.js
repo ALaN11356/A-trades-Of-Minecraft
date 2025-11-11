@@ -1,4 +1,4 @@
-// server.js - versión corregida (copia completa)
+// server.js - versión actualizada para emitir mensajes en tiempo real
 const express = require('express');
 const fs = require('fs');
 const path = require('path');
@@ -175,8 +175,12 @@ app.post('/anadir-miembros', (req, res) => {
     const nuevos = nuevosMiembros.filter(m => !chat.miembros.includes(m));
     if (nuevos.length === 0) return res.json({ ok: true, message: 'No hay miembros nuevos para añadir' });
     chat.miembros = Array.from(new Set([...chat.miembros, ...nuevos]));
-    chat.mensajes.push({ id: `m${Date.now()}`, de: 'system', mensaje: `Se añadieron: ${nuevos.join(', ')}`, timestamp: Date.now() });
+    const sysMsg = { id: `m${Date.now()}`, de: 'system', mensaje: `Se añadieron: ${nuevos.join(', ')}`, timestamp: Date.now() };
+    chat.mensajes.push(sysMsg);
     guardarChats(data);
+    // emitir actualización del chat
+    io.to(chat.id).emit('chat:membersUpdated', { chatId: chat.id, miembros: chat.miembros, sysMsg });
+    io.emit('chat:update', { chatId: chat.id, lastMessage: sysMsg });
     return res.json({ ok: true, añadidos: nuevos, chat });
   } catch (err) {
     console.error('/anadir-miembros', err);
@@ -184,7 +188,34 @@ app.post('/anadir-miembros', (req, res) => {
   }
 });
 
-// RENOMBRAR GRUPO (esta es la ruta que te da 404)
+// Alias para UI que usa '/agregar-miembro' (compatibilidad)
+app.post('/agregar-miembro', (req, res) => {
+  // cuerpo esperado: { chatId, miembro, peticionPor }
+  try {
+    const { chatId, miembro, peticionPor } = req.body;
+    if (!chatId || !miembro || !peticionPor) return res.status(400).json({ ok: false, error: 'Faltan campos' });
+    const data = leerChats();
+    const chat = data.chats.find(c => c.id === chatId || c.chat === chatId);
+    if (!chat) return res.status(404).json({ ok: false, error: 'Chat no encontrado' });
+    if (!chat.miembros.includes(peticionPor)) return res.status(403).json({ ok: false, error: 'No autorizado' });
+    if (!chat.miembros.includes(miembro)) {
+      chat.miembros.push(miembro);
+      const sysMsg = { id: `m${Date.now()}`, de: 'system', mensaje: `Se añadió: ${miembro}`, timestamp: Date.now() };
+      chat.mensajes.push(sysMsg);
+      guardarChats(data);
+      io.to(chat.id).emit('chat:membersUpdated', { chatId: chat.id, miembros: chat.miembros, sysMsg });
+      io.emit('chat:update', { chatId: chat.id, lastMessage: sysMsg });
+      return res.json({ ok: true, añadido: miembro, chat });
+    } else {
+      return res.json({ ok: true, message: 'Miembro ya presente', chat });
+    }
+  } catch (err) {
+    console.error('/agregar-miembro', err);
+    return res.status(500).json({ ok: false, error: 'Error interno' });
+  }
+});
+
+// RENOMBRAR GRUPO
 app.post('/renombrar-grupo', (req, res) => {
   try {
     const { usuario, chatKey, nuevoNombre } = req.body;
@@ -195,6 +226,7 @@ app.post('/renombrar-grupo', (req, res) => {
     if (!chat.miembros.includes(usuario)) return res.status(403).json({ ok: false, error: 'No autorizado' });
     chat.displayName = nuevoNombre;
     guardarChats(data);
+    io.emit('chat:renamed', { chatId: chat.id, displayName: nuevoNombre });
     return res.json({ ok: true, chat });
   } catch (err) {
     console.error('/renombrar-grupo', err);
@@ -203,6 +235,8 @@ app.post('/renombrar-grupo', (req, res) => {
 });
 
 // Guardar mensaje (fallback sin socket)
+// Ahora: guarda el mensaje y emite por socket.io al room correspondiente.
+// Devuelve el objeto del mensaje guardado { ok: true, message: {...} }
 app.post('/guardar-mensaje', (req, res) => {
   try {
     let chatId = req.body.chatId || req.body.chat || req.body.chatKey || req.body.chat_id;
@@ -210,19 +244,41 @@ app.post('/guardar-mensaje', (req, res) => {
     const usuario = req.body.usuario;
     const de = req.body.de;
     if (!mensaje && req.body.text) mensaje = req.body.text;
+    // si viene un string, convertir a objeto simple
     if (typeof mensaje === 'string') mensaje = { de: de || usuario || 'unknown', mensaje: mensaje, timestamp: Date.now() };
     if (mensaje && typeof mensaje === 'object') {
       if (!mensaje.de) mensaje.de = de || usuario || 'unknown';
       if (!mensaje.timestamp) mensaje.timestamp = Date.now();
     }
     if (!chatId || !mensaje || !mensaje.de || !mensaje.mensaje) return res.status(400).json({ ok: false, error: 'Faltan datos' });
+
     const data = leerChats();
     let chatObj = data.chats.find(c => c.id === chatId);
     if (!chatObj) chatObj = data.chats.find(c => c.chat === chatId || c.id === (chatId.id || ''));
     if (!chatObj) return res.status(404).json({ ok: false, error: 'Chat no encontrado' });
-    chatObj.mensajes.push({ id: `m${Date.now()}`, de: mensaje.de, mensaje: mensaje.mensaje, timestamp: mensaje.timestamp || Date.now() });
+
+    // Construir objeto de mensaje consistente
+    const msgObj = {
+      id: `m${Date.now()}`,
+      de: mensaje.de,
+      mensaje: mensaje.mensaje,
+      timestamp: mensaje.timestamp || Date.now()
+    };
+
+    chatObj.mensajes = chatObj.mensajes || [];
+    chatObj.mensajes.push(msgObj);
     guardarChats(data);
-    return res.json({ ok: true });
+
+    // EMIT: enviar a todos los conectados al room del chat
+    try {
+      io.to(chatObj.id).emit('recibirMensaje', msgObj);
+      // también avisamos que el chat cambió (para listados)
+      io.emit('chat:update', { chatId: chatObj.id, lastMessage: msgObj });
+    } catch (e) {
+      console.warn('Error emitiendo socket después de guardar mensaje', e);
+    }
+
+    return res.json({ ok: true, message: msgObj });
   } catch (err) {
     console.error('/guardar-mensaje', err);
     return res.status(500).json({ ok: false, error: 'Error interno' });
@@ -255,6 +311,36 @@ app.post('/guardar-articulo', upload.single('imagen'), (req, res) => {
   }
 });
 
+// Salir del grupo (alias esperado por UI: /salir-grupo)
+app.post('/salir-grupo', (req, res) => {
+  try {
+    const { chatId, usuario } = req.body;
+    if (!chatId || !usuario) return res.status(400).json({ ok: false, error: 'Faltan campos' });
+    const data = leerChats();
+    const chat = data.chats.find(c => c.id === chatId || c.chat === chatId);
+    if (!chat) return res.status(404).json({ ok: false, error: 'Chat no encontrado' });
+    if (!Array.isArray(chat.miembros) || !chat.miembros.includes(usuario)) return res.status(400).json({ ok: false, error: 'Usuario no pertenece al chat' });
+
+    chat.miembros = chat.miembros.filter(m => m !== usuario);
+    const sysMsg = { id: `m${Date.now()}`, de: 'system', mensaje: `${usuario} abandonó el grupo`, timestamp: Date.now() };
+    chat.mensajes.push(sysMsg);
+
+    // opcional: eliminar chat si ya no tiene miembros
+    if (!chat.miembros.length) {
+      data.chats = data.chats.filter(c => c.id !== chat.id);
+    }
+
+    guardarChats(data);
+    io.to(chat.id).emit('chat:memberLeft', { chatId: chat.id, usuario, sysMsg });
+    io.emit('chat:update', { chatId: chat.id, lastMessage: sysMsg });
+
+    return res.json({ ok: true, chat });
+  } catch (err) {
+    console.error('/salir-grupo', err);
+    return res.status(500).json({ ok: false, error: 'Error interno' });
+  }
+});
+
 // Endpoint diagnóstico: lista todas las rutas registradas
 app.get('/__routes', (req, res) => {
   try {
@@ -270,21 +356,38 @@ app.get('/__routes', (req, res) => {
   }
 });
 
-// socket.io (opcional)
+// socket.io
 io.on('connection', socket => {
   console.log('[socket] conectado', socket.id);
-  socket.on('joinChat', ({ chatId }) => socket.join(chatId));
+
+  // join a chat room
+  socket.on('joinChat', ({ chatId }) => {
+    if (!chatId) return;
+    try {
+      socket.join(chatId);
+      console.log(`[socket] ${socket.id} se unió a room ${chatId}`);
+      // opcional: emitir confirmación
+      socket.emit('joined', { chatId });
+    } catch (e) {
+      console.warn('joinChat error', e);
+    }
+  });
+
+  // recibir mensaje desde cliente socket (opcional)
   socket.on('nuevoMensaje', ({ chatId, mensaje }) => {
+    if (!chatId || !mensaje) return;
     const data = leerChats();
     let chat = data.chats.find(c => c.id === chatId);
     if (!chat) return;
-    chat.mensajes.push({ id: `m${Date.now()}`, de: mensaje.de, mensaje: mensaje.mensaje, timestamp: mensaje.timestamp || Date.now() });
+    const msgObj = { id: `m${Date.now()}`, de: mensaje.de, mensaje: mensaje.mensaje, timestamp: mensaje.timestamp || Date.now() };
+    chat.mensajes.push(msgObj);
     guardarChats(data);
-    io.to(chatId).emit('recibirMensaje', mensaje);
+    io.to(chatId).emit('recibirMensaje', msgObj);
+    io.emit('chat:update', { chatId, lastMessage: msgObj });
   });
+
   socket.on('disconnect', () => console.log('[socket] desconectado', socket.id));
 });
-
 
 // Fallback para peticiones no encontradas: devolver JSON si el cliente acepta JSON
 app.use((req, res) => {

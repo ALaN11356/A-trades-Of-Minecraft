@@ -1,325 +1,304 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <title>Crear Artículo Infernal</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Crear Artículo — Tienda Infernal</title>
+
+  <!-- Fuentes y script de verificación (debe existir en la misma carpeta) -->
+  <link href="https://fonts.googleapis.com/css2?family=New+Rocker&display=swap" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=UnifrakturCook:wght@700&display=swap" rel="stylesheet">
-  <script src="verificarid.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
+  <script src="verificarId.js"></script>
+
+  <meta name="color-scheme" content="dark">
   <style>
-body {
-  position: relative;
-  background: radial-gradient(circle at center, #000000 0%, #1a0000 60%, #0a0000 100%);
-  color: #ff5555;
-  font-family: 'UnifrakturCook', cursive;
-  margin: 0;
-  padding: 40px;
-  min-height: 100vh;
-  overflow: hidden;
-  transition: background 2s ease-in-out;
-}
+    :root{--bg-1:#080000;--panel:#1a0000;--accent:#ff3a3a;--muted:#ffb6b6;--glass:rgba(255,255,255,0.03);--card-radius:14px}
+    *{box-sizing:border-box}
+    html,body{height:100%;margin:0;background:#000;color:var(--accent);font-family:'New Rocker',cursive;overflow:hidden}
+    #proc-bg{position:fixed;inset:0;width:100%;height:100%;z-index:0}
+    main{position:relative;z-index:6;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:40px}
 
-/* Fondo animado con símbolos cayendo */
-body::before {
-  content: "† ☠ ☣ ☯ ✝ ✞ ⚰ ☢ ♰ ☠ ☣ ☯ ✝ ✞ ⚰ ☢ ♰ ☠ ☣ ☯";
-  position: absolute;
-  top: -200%;
-  left: 0;
-  width: 100%;
-  height: 400%;
-  font-size: 2em;
-  color: rgba(255, 50, 50, 0.08);
-  line-height: 1.5;
-  white-space: pre;
-  pointer-events: none;
-  animation: symbolsRain 30s linear infinite;
-  z-index: 0;
-  filter: blur(0.5px);
-}
+    /* Card igual estética tienda */
+    .card{width:100%;max-width:760px;border-radius:18px;padding:28px;background:linear-gradient(180deg,rgba(20,0,0,0.95),rgba(40,0,0,0.92));border:1px solid rgba(255,0,0,0.06);box-shadow:0 30px 80px rgba(0,0,0,0.7),inset 0 0 30px rgba(255,0,0,0.02)}
+    h1{font-family:'UnifrakturCook',serif;font-size:2.2rem;margin:0 0 12px;color:var(--accent);text-shadow:0 0 10px rgba(255,0,0,0.08)}
+    p.description{font-family:'Share Tech Mono',monospace;color:#ffcfcf;margin:6px 0 18px}
 
-/* Oscurece el fondo por encima de los símbolos */
-body::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: radial-gradient(circle at center, rgba(0, 0, 0, 0.6) 0%, rgba(10, 0, 0, 0.95) 100%);
-  z-index: 1;
-  pointer-events: none;
-  backdrop-filter: blur(1px);
-}
+    form{display:flex;flex-direction:column;gap:12px}
+    label{font-family:'Share Tech Mono',monospace;color:#ffcfcf}
+    input[type=text], input[type=number], textarea, select{padding:12px;border-radius:10px;border:1px solid rgba(255,0,0,0.06);background:linear-gradient(145deg,#080000,#120000);color:#ffdede;font-family:'Share Tech Mono';outline:none}
+    textarea{min-height:96px;resize:vertical}
 
-/* Todo el contenido real va por encima */
-body > * {
-  position: relative;
-  z-index: 2;
-}
+    .row{display:flex;gap:12px;align-items:center}
+    .col{flex:1}
 
-@keyframes symbolsRain {
-  0% { transform: translateY(0); }
-  100% { transform: translateY(100%); }
-}
+    /* imagen */
+    .imagen-row{display:flex;gap:12px;align-items:center}
+    .imagen-preview{width:128px;height:96px;border-radius:8px;object-fit:cover;border:2px solid rgba(255,0,0,0.08);background:#0a0000;display:block}
+    .imagen-info{font-family:'Share Tech Mono';color:#ffb6b6;font-size:13px}
 
-h1 {
-  text-align: center;
-  text-shadow: 0 0 10px crimson, 0 0 25px red, 2px 2px 5px black;
-  font-size: 3em;
-  margin-bottom: 30px;
-  animation: glow-pulse 2.5s ease-in-out infinite;
-  letter-spacing: 2px;
-  transition: text-shadow 0.3s;
-}
+    .botones{display:flex;gap:12px;justify-content:flex-end;margin-top:8px}
+    .btn{background:linear-gradient(180deg,var(--accent),#b20000);border:0;color:#111;padding:10px 16px;border-radius:10px;font-weight:700;cursor:pointer;box-shadow:0 8px 30px rgba(255,0,0,0.12)}
+    .btn.gray{background:linear-gradient(180deg,#220000,#3a0000);color:#ffdede;border:1px solid rgba(255,255,255,0.04)}
+    .btn:disabled{opacity:0.6;cursor:not-allowed;transform:none;box-shadow:none}
 
-@keyframes glow-pulse {
-  0%, 100% {
-    text-shadow: 0 0 10px crimson, 0 0 25px red, 2px 2px 5px black;
-  }
-  50% {
-    text-shadow: 0 0 30px crimson, 0 0 60px red, 5px 5px 15px black;
-  }
-}
+    #mensaje{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);z-index:10000;padding:10px 14px;border-radius:10px;background:linear-gradient(135deg,rgba(20,0,0,0.95),rgba(40,0,0,0.85));border:1px solid #7f0000;color:var(--muted);font-family:'Share Tech Mono';opacity:0;pointer-events:none;transition:all .25s}
+    #mensaje.show{opacity:1;pointer-events:auto}
 
-form {
-  max-width: 650px;
-  margin: auto;
-  background: linear-gradient(145deg, #1a0000, #0d0000);
-  padding: 30px;
-  border-radius: 18px;
-  box-shadow: 0 0 25px #8b0000, inset 0 0 15px #ff0000;
-  display: flex;
-  flex-direction: column;
-  gap: 25px;
-  border: 2px solid #550000;
-  backdrop-filter: blur(5px);
-  animation: fadeInUp 1.5s ease-out;
-  transition: all 0.4s ease;
-}
+    .small-muted{font-family:'Share Tech Mono';color:#ffb6b6;font-size:13px}
 
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(50px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-label {
-  font-size: 1.3em;
-  color: #ff7777;
-  text-shadow: 1px 1px 3px black;
-  font-family: 'Share Tech Mono', monospace;
-}
-
-input[type="text"],
-select {
-  padding: 12px 15px;
-  border: 2px solid #550000;
-  border-radius: 8px;
-  font-family: 'Share Tech Mono', monospace;
-  background-color: #210000;
-  color: #ff4444;
-  box-shadow: inset 0 0 10px red;
-  transition: all 0.3s ease, box-shadow 0.5s ease;
-}
-
-input[type="text"]:focus,
-select:focus {
-  outline: none;
-  background-color: #2a0000;
-  box-shadow: inset 0 0 16px crimson, 0 0 10px red;
-}
-
-.imagen-row {
-  display: flex;
-  gap: 12px;
-  align-items: center;
-}
-
-.imagen-row span {
-  flex: 1;
-  padding: 10px;
-  background: #330000;
-  border: 1px solid crimson;
-  border-radius: 6px;
-  color: #ff4444;
-  box-shadow: 0 0 5px crimson;
-  font-family: 'Share Tech Mono', monospace;
-  transition: background 0.3s ease;
-}
-
-.imagen-row span:hover {
-  background: #440000;
-}
-
-.botones {
-  display: flex;
-  justify-content: space-between;
-  gap: 10px;
-  flex-wrap: wrap;
-}
-
-button {
-  flex: 1;
-  min-width: 120px;
-  padding: 14px 25px;
-  background: linear-gradient(135deg, #8b0000, #ff0000);
-  border: none;
-  color: black;
-  font-weight: bold;
-  border-radius: 10px;
-  cursor: pointer;
-  box-shadow: 0 0 15px crimson;
-  transition: all 0.3s ease;
-  font-family: 'Courier New', monospace;
-  text-transform: uppercase;
-  letter-spacing: 1.5px;
-  animation: buttonFadeIn 1.8s ease-in;
-}
-
-@keyframes buttonFadeIn {
-  from {
-    opacity: 0;
-    transform: scale(0.9);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
-}
-
-button:hover {
-  background: linear-gradient(135deg, #ff0000, #ff5555);
-  box-shadow: 0 0 25px red, 0 0 60px crimson;
-  transform: scale(1.08);
-  color: #000;
-}
-
-#mensajeInfernal {
-  margin-top: 25px;
-  text-align: center;
-  font-size: 1.3em;
-  background: #1a0000;
-  border: 2px solid crimson;
-  padding: 18px;
-  border-radius: 15px;
-  display: none;
-  color: #ff5555;
-  box-shadow: 0 0 10px crimson, inset 0 0 10px red;
-  animation: inferno-flicker 3s infinite alternate;
-  transition: opacity 0.5s ease, transform 0.5s ease;
-}
-
-@keyframes inferno-flicker {
-  0% {
-    box-shadow: 0 0 5px crimson, inset 0 0 5px red;
-  }
-  100% {
-    box-shadow: 0 0 20px crimson, inset 0 0 20px red;
-  }
-}
-
+    @media(max-width:720px){
+      .card{padding:18px}
+      .imagen-preview{width:96px;height:72px}
+      main{padding:20px}
+    }
   </style>
 </head>
 <body>
-  <h1>🩸 Invoca un Nuevo Artículo 🩸</h1>
+  <canvas id="proc-bg" aria-hidden="true"></canvas>
 
-<form id="formArticulo">
-  <label for="imagenInput">Imagen maldita:</label>
-  <div class="imagen-row">
-    <button type="button" onclick="document.getElementById('imagenInput').click()">📷 Elegir</button>
-    <span id="nombreImagen">Ninguna imagen elegida aún...</span>
-  </div>
-  <input type="file" id="imagenInput" accept="image/*" style="display:none" onchange="actualizarNombreImagen()">
+  <main>
+    <section class="card" aria-labelledby="titulo">
+      <h1 id="titulo">➕ Crear artículo</h1>
+      <p class="description">Rellena los campos y sube la imagen. Tu alma no es necesaria, pero sí tu sesión.</p>
 
-  <label for="nombre">Nombre del objeto:</label>
-  <input type="text" id="nombre" placeholder="Ej: Espada Maldita" required>
+      <form id="formArticulo" novalidate>
+        <label for="nombre">Nombre</label>
+        <input id="nombre" name="nombre" type="text" placeholder="Nombre del artículo" required>
 
-  <label for="precio">Precio en almas:</label>
-  <input type="text" id="precio" placeholder="Ej: 666" required>
+        <div class="row">
+          <div class="col">
+            <label for="precio">Precio</label>
+            <input id="precio" name="precio" type="number" min="0" step="1" placeholder="0" required>
+          </div>
+          <div style="width:180px">
+            <label for="version">Versión</label>
+            <input id="version" name="version" type="text" placeholder="v1.0">
+          </div>
+        </div>
 
-  <label for="descripcion">Descripción del castigo:</label>
-  <input type="text" id="descripcion" placeholder="Ej: Corta hasta la voluntad" required>
+        <label for="servidor">Servidor</label>
+        <input id="servidor" name="servidor" type="text" placeholder="Nombre o IP del servidor">
 
-  <label for="version">Versión del inframundo:</label>
-  <select id="version">
-    <option>1.16.5</option>
-    <option>1.20.1</option>
-  </select>
+        <label for="descripcion">Descripción</label>
+        <textarea id="descripcion" name="descripcion" placeholder="Describe el artículo..."></textarea>
 
-  <label for="servidor">Servidor de condena:</label>
-  <select id="servidor">
-    <option>speedrevivalcraft</option>
-    <option>311cusocu</option>
-    <option>arg113</option>
-  </select>
+        <label>Imagen (opcional)</label>
+        <div class="imagen-row">
+          <img id="previewImg" class="imagen-preview" alt="Previsualización" src="placeholder.png">
+          <div style="flex:1">
+            <div class="imagen-info" id="nombreImagen">Ninguna imagen elegida</div>
+            <div style="margin-top:8px;display:flex;gap:8px">
+              <button type="button" class="btn gray" id="btnSelect">📁 Elegir archivo</button>
+              <button type="button" class="btn gray" id="btnRemove" style="display:none">✖ Quitar</button>
+              <input id="imagenFile" name="imagen" type="file" accept="image/*" style="display:none">
+            </div>
+            <div class="small-muted" style="margin-top:8px">Recomendado: PNG/JPG. Máx 5MB.</div>
+          </div>
+        </div>
 
-  <div class="botones">
-    <button type="button" onclick="guardarArticulo()">💾 Guardar</button>
-    <button type="button" onclick="window.location.href='tienda.html'">❌ Cancelar</button>
-  </div>
-</form>
+        <div class="botones">
+          <button type="button" class="btn gray" id="btnCancelar">↩ Volver</button>
+          <button type="submit" class="btn" id="btnEnviar">💾 Publicar</button>
+        </div>
+      </form>
+    </section>
+  </main>
 
-<div id="mensajeInfernal">⚠️ Aquí aparecerán mensajes del inframundo ⚠️</div>
+  <div id="mensaje" role="status" aria-live="polite"></div>
 
   <script>
-    verificarID(() => {
-      console.log("✅ Verificación doble completada");
+    /* ---------------- CONFIG ---------------- */
+    const API_BASE = 'http://localhost:3000'; // ajusta si tu API está en otra parte
+    const MAX_FILE_BYTES = 5 * 1024 * 1024; // 5 MB
+
+    /* ---------------- HELPERS ---------------- */
+    function showToast(text, ms = 3500) {
+      const el = document.getElementById('mensaje');
+      el.textContent = text;
+      el.classList.add('show');
+      setTimeout(() => el.classList.remove('show'), ms);
+    }
+
+    async function safeFetch(url, options = {}) {
+      const fullUrl = url.startsWith('/') ? (API_BASE + url) : url;
+      try {
+        const res = await fetch(fullUrl, options);
+        const ct = res.headers.get('content-type') || '';
+        if (!res.ok) {
+          if (ct.includes('application/json')) {
+            const j = await res.json();
+            throw j;
+          } else {
+            throw { message: 'Server error', status: res.status };
+          }
+        }
+        if (ct.includes('application/json')) return res.json();
+        return res.text();
+      } catch (err) {
+        throw err;
+      }
+    }
+
+    /* ---------------- DOM ---------------- */
+    const form = document.getElementById('formArticulo');
+    const nombreEl = document.getElementById('nombre');
+    const precioEl = document.getElementById('precio');
+    const versionEl = document.getElementById('version');
+    const servidorEl = document.getElementById('servidor');
+    const descripcionEl = document.getElementById('descripcion');
+    const imagenFileEl = document.getElementById('imagenFile');
+    const btnSelect = document.getElementById('btnSelect');
+    const btnRemove = document.getElementById('btnRemove');
+    const previewImg = document.getElementById('previewImg');
+    const nombreImagen = document.getElementById('nombreImagen');
+    const btnEnviar = document.getElementById('btnEnviar');
+    const btnCancelar = document.getElementById('btnCancelar');
+
+    let userId = null;
+
+    /* ---------------- verificar sesión / IP ---------------- */
+    function continuarSiVerificado(cb) {
+      // verificarId.js debe exponer verificarID(callback)
+      try {
+        if (typeof verificarID === 'function') {
+          verificarID(cb);
+          return;
+        }
+      } catch (e) { /* fallthrough */ }
+      // fallback: usar sessionStorage
+      cb();
+    }
+
+    continuarSiVerificado(() => {
+      userId = sessionStorage.getItem('userId');
+      if (!userId) {
+        showToast('No hay sesión activa. Redirigiendo...');
+        setTimeout(() => location.href = 'index.html', 900);
+        return;
+      }
+      // todo ok, se queda en la página
     });
 
-    function actualizarNombreImagen() {
-      const input = document.getElementById('imagenInput');
-      const nombre = input.files[0] ? input.files[0].name : 'Selecciona imagen';
-      document.getElementById('nombreImagen').textContent = nombre;
+    /* ---------------- selección de imagen ---------------- */
+    btnSelect.addEventListener('click', () => imagenFileEl.click());
+    btnCancelar.addEventListener('click', () => { location.href = 'tienda.html'; });
+
+    imagenFileEl.addEventListener('change', () => {
+      const f = imagenFileEl.files && imagenFileEl.files[0];
+      if (!f) {
+        clearImage();
+        return;
+      }
+      if (f.size > MAX_FILE_BYTES) {
+        showToast('Archivo demasiado grande. Máx 5MB.');
+        imagenFileEl.value = '';
+        return clearImage();
+      }
+      // Solo imágenes
+      if (!f.type.startsWith('image/')) {
+        showToast('El archivo no es una imagen válida.');
+        imagenFileEl.value = '';
+        return clearImage();
+      }
+      const url = URL.createObjectURL(f);
+      previewImg.src = url;
+      nombreImagen.textContent = f.name;
+      btnRemove.style.display = 'inline-block';
+    });
+
+    btnRemove.addEventListener('click', () => {
+      imagenFileEl.value = '';
+      clearImage();
+    });
+
+    function clearImage() {
+      previewImg.src = 'placeholder.png';
+      nombreImagen.textContent = 'Ninguna imagen elegida';
+      btnRemove.style.display = 'none';
     }
 
-    function mostrarMensaje(texto) {
-      const msg = document.getElementById("mensajeInfernal");
-      msg.textContent = texto;
-      msg.style.display = "block";
+    /* ---------------- validación ---------------- */
+    function validarCampos() {
+      const nombre = nombreEl.value.trim();
+      const precio = precioEl.value;
+      if (!nombre) { showToast('El nombre es obligatorio'); nombreEl.focus(); return false; }
+      if (precio === '' || isNaN(Number(precio)) || Number(precio) < 0) { showToast('Precio inválido'); precioEl.focus(); return false; }
+      // opcional: descripción > límite
+      if (descripcionEl.value.length > 2000) { showToast('Descripción demasiado larga'); descripcionEl.focus(); return false; }
+      return true;
     }
 
-    function guardarArticulo() {
-      const id = sessionStorage.getItem('userId') || 'desconocido';
-      const imagen = document.getElementById('imagenInput').files[0];
-      const nombre = document.getElementById('nombre').value.trim();
-      const precio = document.getElementById('precio').value.trim();
-      const descripcion = document.getElementById('descripcion').value.trim();
+    /* ---------------- submit ---------------- */
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      if (!validarCampos()) return;
 
-      if (!imagen || !nombre || !precio || !descripcion) {
-        mostrarMensaje("⚠️ Todos los campos deben estar completos.");
+      if (!userId) {
+        showToast('Sesión perdida. Refresca la página.');
         return;
       }
 
-      const version = document.getElementById('version').value;
-      const servidor = document.getElementById('servidor').value;
+      // preparar FormData
+      const fd = new FormData();
+      fd.append('creador', userId);
+      fd.append('nombre', nombreEl.value.trim());
+      fd.append('precio', precioEl.value);
+      fd.append('version', versionEl.value.trim());
+      fd.append('servidor', servidorEl.value.trim());
+      fd.append('descripcion', descripcionEl.value.trim());
+      const file = (imagenFileEl.files && imagenFileEl.files[0]) ? imagenFileEl.files[0] : null;
+      if (file) fd.append('imagen', file, file.name);
 
-      const formData = new FormData();
-      formData.append('imagen', imagen);
-      formData.append('nombre', nombre);
-      formData.append('precio', precio);
-      formData.append('descripcion', descripcion);
-      formData.append('version', version);
-      formData.append('servidor', servidor);
-      formData.append('vendedor', id);
+      // desactivar botón mientras sube
+      btnEnviar.disabled = true;
+      btnEnviar.textContent = 'Subiendo...';
 
-      fetch('/guardar-articulo', {
-        method: 'POST',
-        body: formData
-      })
-      .then(res => res.json())
-      .then(data => {
-        if (data.guardado) {
-          window.location.href = 'tienda.html';
-        } else {
-          mostrarMensaje("❌ No se pudo guardar el artículo.");
+      try {
+        // En el servidor espera un endpoint para crear artículo que acepte multipart/form-data.
+        // Ajusta '/crear-articulo' al endpoint real si difiere.
+        const res = await fetch(API_BASE + '/crear-articulo', {
+          method: 'POST',
+          body: fd
+          // NOTA: no poner headers para multipart, el navegador lo gestiona
+        });
+
+        if (!res.ok) {
+          let message = `Error servidor (${res.status})`;
+          try { const j = await res.json(); message = j.message || JSON.stringify(j); } catch(_) {}
+          throw new Error(message);
         }
-      })
-      .catch(err => {
-        console.error("🔥 Error infernal al guardar:", err);
-        mostrarMensaje("💀 Error infernal al guardar el artículo.");
-      });
-    }
+
+        const data = await res.json().catch(() => ({ ok: true }));
+        // Asumimos éxito si status ok
+        showToast('Artículo creado correctamente');
+        // redirigir a tienda o limpiar form
+        setTimeout(() => location.href = 'tienda.html', 700);
+
+      } catch (err) {
+        console.error('Error subiendo artículo:', err);
+        showToast('Error al crear artículo: ' + (err.message || 'red'));
+        btnEnviar.disabled = false;
+        btnEnviar.textContent = '💾 Publicar';
+      }
+    });
+
+    /* ---------------- Procedural background (mismo estilo tienda) ---------------- */
+    (function(){
+      const canvas = document.getElementById('proc-bg');
+      const ctx = canvas.getContext && canvas.getContext('2d');
+      if (!ctx) return;
+      let w,h,dpr=Math.min(window.devicePixelRatio||1,2), t0=performance.now();
+      function resize(){ w=innerWidth; h=innerHeight; canvas.width=Math.round(w*dpr); canvas.height=Math.round(h*dpr); canvas.style.width=w+'px'; canvas.style.height=h+'px'; ctx.setTransform(dpr,0,0,dpr,0,0); }
+      window.addEventListener('resize', resize); resize();
+      function loop(now){ const t=(now-t0)*0.001; ctx.clearRect(0,0,w,h);
+        const grd = ctx.createLinearGradient(0,0,w,h); grd.addColorStop(0, '#120000'); grd.addColorStop(1, '#050000'); ctx.fillStyle = grd; ctx.fillRect(0,0,w,h);
+        for(let i=0;i<12;i++){ const x = (Math.sin(t*0.3 + i)*0.5+0.5)*w; const y = (Math.cos(t*0.27 + i*1.3)*0.5+0.5)*h; const r = 80 + (i*6)%100; const g = ctx.createRadialGradient(x,y,r*0.1,x,y,r); g.addColorStop(0, 'rgba(255,58,58,0.08)'); g.addColorStop(1, 'rgba(0,0,0,0)'); ctx.fillStyle = g; ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2); ctx.fill(); }
+        ctx.fillStyle='rgba(0,0,0,0.25)'; ctx.fillRect(0,0,w,h);
+        requestAnimationFrame(loop);
+      }
+      requestAnimationFrame(loop);
+    })();
   </script>
 </body>
 </html>

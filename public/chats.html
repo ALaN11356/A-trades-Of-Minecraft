@@ -1,651 +1,508 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <title>Salas del Infierno</title>
-  <link href="https://fonts.googleapis.com/css2?family=Nosifer&display=swap " rel="stylesheet">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Salas del Infierno – UI Mejorada</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=Share+Tech+Mono&family=New+Rocker&display=swap" rel="stylesheet">
   <script src="verificarId.js"></script>
-  <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background: radial-gradient(circle at center, #1a0000 0%, #0d0000 100%);
-      color: #fceaea;
-      margin: 0;
-      display: flex;
-      height: 100vh;
-      overflow: hidden;
-      transition: background 2s ease;
+    :root{
+      --bg-1:#0b0000; --bg-2:#180000; --accent:#ff3a3a; --muted:#ffb6b6; --glass:rgba(255,255,255,0.03);
+      --glass-2:rgba(255,255,255,0.02);
+      --neon:rgba(255,58,58,0.16);
+      --success:#60d394;
+      --danger:#ff4d4d;
     }
-    .btn-back { position: fixed; left: 18px; top: 18px; z-index: 1200; background: linear-gradient(180deg,#220000,#440000); color: #ffdede; border: 1px solid rgba(255,80,80,0.2); padding: 8px 12px; border-radius: 10px; font-weight: 600; cursor: pointer; box-shadow: 0 4px 14px rgba(0,0,0,0.6); backdrop-filter: blur(4px); transition: transform 0.12s ease, box-shadow 0.12s; font-family: 'Share Tech Mono', monospace; }
-    .btn-back:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0,0,0,0.7); }
-    .sidebar { width: 28%; background-color: #140000; border-right: 1px solid #3a0000; display: flex; flex-direction: column; box-shadow: 3px 0 25px rgba(100, 0, 0, 0.5); animation: fadeInLeft 0.8s ease-out both; padding-top: 72px; }
-    .header { padding: 1.2rem; font-size: 1.6rem; text-align: center; background-color: #1c0000; text-shadow: 0 0 12px #ff3c3c, 0 0 20px #a00000; font-weight: bold; letter-spacing: 2px; color: #ff5c5c; border-bottom: 1px solid #3a0000; font-family: 'Share Tech Mono', monospace; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
-    .btn-add { background: linear-gradient(135deg,#7a0000,#aa0000); border: 1px solid #ff7777; color: #fff; padding: 6px 10px; border-radius: 8px; cursor: pointer; font-weight: bold; box-shadow: 0 2px 6px rgba(255,0,0,0.2); }
-    .chat-list { flex: 1; overflow-y: auto; scrollbar-width: thin; scrollbar-color: #cc0000 #0a0000; animation: fadeInUp 1.2s ease-out both; }
-    .chat-list::-webkit-scrollbar { width: 6px; }
-    .chat-list::-webkit-scrollbar-thumb { background-color: #cc0000; border-radius: 3px; }
-    .chat-item { padding: 1rem 1.3rem; border-bottom: 1px solid #330000; cursor: pointer; transition: all 0.3s ease; color: #ffaaaa; font-size: 1rem; border-left: 3px solid transparent; font-family: 'Share Tech Mono', monospace; display:flex; align-items:center; justify-content:space-between; gap:8px; }
-    .chat-item:hover { background-color: #220000; padding-left: 1.7rem; border-left: 3px solid #aa0000; color: #fff0f0; }
-    .chat-meta { font-size:0.85rem; color:#ffbdbd; opacity:0.9; }
-    .main { flex: 1; background-color: #0a0000; display: flex; flex-direction: column; animation: fadeIn 1.2s ease-in-out both; padding-top: 18px; }
-    .main-header { padding: 1rem 1.5rem; background-color: #1a0000; border-bottom: 1px solid #3a0000; font-size: 1.05rem; font-weight: bold; text-shadow: 0 0 10px #ff4444; color: #ff6666; font-family: 'Share Tech Mono', monospace; display:flex; align-items:center; justify-content:space-between; gap:10px; }
-    .mensajes { flex: 1; overflow-y: auto; padding: 2rem; display: flex; flex-direction: column; gap: 1.4rem; scrollbar-width: thin; animation: fadeInUp 1s ease-out; }
-    .mensaje { max-width: 65%; padding: 0.6rem 0.9rem; border-radius: 12px; background-color: #2a0000; box-shadow: 0 0 10px rgba(255, 0, 0, 0.2); animation: mensajePop 0.4s ease-in-out both; word-wrap: break-word; font-size: 1rem; backdrop-filter: blur(3px); transition: transform 0.3s; }
-    .mensaje.izq { align-self: flex-start; background-color: #200000; border-left: 4px solid #aa0000; }
-    .mensaje.der { align-self: flex-end; background-color: #440000; border-right: 4px solid #ff5555; }
-    .sender { font-size: 0.75rem; color: #ffdede; opacity: 0.95; margin-bottom: 4px; font-family: 'Share Tech Mono', monospace; }
-    .placeholder { text-align: center; margin-top: 4rem; font-size: 1.3rem; color: #ff8888; opacity: 0.9; animation: fadeIn 1s ease-out both; }
-    .input-area-container { position: relative; display: flex; gap: 12px; padding: 14px; background: rgba(30, 0, 0, 0.6); border-top: 1px solid rgba(255, 0, 0, 0.2); backdrop-filter: blur(8px); box-shadow: 0 -2px 10px rgba(255, 0, 0, 0.2); transform: translateY(100%); opacity: 0; pointer-events: none; transition: all 0.4s ease; }
-    .input-area-container.visible { transform: translateY(0%); opacity: 1; pointer-events: auto; }
-    #inputMensaje { flex: 1; padding: 12px 16px; background: rgba(60, 0, 0, 0.8); color: #f8d7da; border: 1px solid rgba(255, 0, 0, 0.3); border-radius: 8px; font-size: 15px; resize: none; height: 46px; outline: none; transition: border 0.2s, background 0.2s; font-family: 'Share Tech Mono', monospace; }
-    .input-area-container button { padding: 12px 20px; background: linear-gradient(to right, #ff1f1f, #6e0000); color: white; font-weight: bold; border: none; border-radius: 6px; cursor: pointer; box-shadow: 0 2px 5px rgba(255, 0, 0, 0.4); transition: background 0.2s, transform 0.1s; font-family: 'Share Tech Mono', monospace; }
-    .modal { position: fixed; inset: 0; display:flex; align-items:center; justify-content:center; background: rgba(0,0,0,0.6); z-index: 9999; }
-    .modal .card { background: #160000; border: 1px solid #4a0000; padding: 18px; border-radius: 12px; width: 420px; max-width: 90%; color: #ffdede; }
-    .user-list { max-height: 300px; overflow:auto; margin-top:10px; display:flex; flex-direction:column; gap:6px; }
-    .user-item { display:flex; align-items:center; gap:8px; justify-content:space-between; padding:8px; border-radius:8px; background:rgba(255,255,255,0.02); }
-    .small { font-size:0.9rem; color:#ffbdbd; }
-    @keyframes mensajePop { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
-    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-    @keyframes fadeInUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
-    @keyframes fadeInLeft { from { opacity: 0; transform: translateX(-50px); } to { opacity: 1; transform: translateX(0); } }
+    *{box-sizing:border-box}
+    html,body{height:100%;margin:0;background:linear-gradient(180deg,var(--bg-1),#050000);color:var(--muted);font-family:'Inter', 'Share Tech Mono', system-ui, sans-serif;overflow:hidden}
+
+    /* Background canvas */
+    #proc-bg{position:fixed;inset:0;width:100%;height:100%;z-index:0;filter:blur(10px) saturate(120%)}
+
+    /* Layout */
+    .wrap{position:relative;z-index:6;display:grid;grid-template-columns:360px 1fr;gap:20px;height:100vh;padding:24px}
+    .card{border-radius:14px;padding:14px;background:linear-gradient(180deg,rgba(255,255,255,0.02),rgba(255,255,255,0.01));border:1px solid rgba(255,0,0,0.06);box-shadow:0 10px 40px rgba(0,0,0,0.6)}
+
+    /* SIDEBAR */
+    .sidebar{display:flex;flex-direction:column;gap:12px}
+    .brand{display:flex;gap:12px;align-items:center}
+    .brand .logo{width:56px;height:56px;border-radius:12px;background:radial-gradient(circle at 30% 20%,#ff7373 0%,#ae0000 40%,#3b0000 100%);display:grid;place-items:center;font-family:'New Rocker';font-size:20px;color:#111;box-shadow:0 6px 22px rgba(170,0,0,0.18);border:1px solid rgba(255,255,255,0.04)}
+    .brand .meta{display:flex;flex-direction:column}
+    .brand .meta .title{font-weight:800;color:var(--accent);letter-spacing:1px;text-transform:uppercase}
+    .brand .meta .sub{font-size:12px;color:var(--muted);opacity:0.9}
+
+    .sidebar-controls{display:flex;gap:8px}
+    .btn{background:linear-gradient(180deg,var(--accent),#b20000);border:0;color:#111;padding:8px 12px;border-radius:10px;cursor:pointer;font-weight:700;box-shadow:0 6px 18px rgba(170,0,0,0.12)}
+    .btn-ghost{background:transparent;border:1px solid rgba(255,255,255,0.04);color:#ffdede}
+    .search{display:flex;gap:8px;align-items:center;padding:8px;border-radius:10px;background:var(--glass);border:1px solid rgba(255,255,255,0.02)}
+    .search input{background:transparent;border:0;color:var(--muted);outline:none;font-size:14px}
+
+    .chat-list{flex:1;overflow:auto;padding:6px;display:flex;flex-direction:column;gap:8px}
+    .chat-item{display:flex;gap:12px;align-items:center;padding:8px;border-radius:10px;cursor:pointer;transition:all .16s;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.01));border-left:4px solid transparent}
+    .chat-item:hover{transform:translateX(6px);border-left-color:#aa0000}
+    .chat-item.active{background:linear-gradient(90deg,rgba(255,58,58,0.03),transparent);border-left-color:var(--accent);box-shadow:inset 0 0 18px rgba(255,58,58,0.02)}
+    .avatar{width:44px;height:44px;border-radius:10px;display:grid;place-items:center;font-weight:700;color:#111;background:linear-gradient(180deg,#ff7b7b,#b30000);box-shadow:0 6px 16px rgba(0,0,0,0.5)}
+    .chat-meta{flex:1;display:flex;flex-direction:column}
+    .chat-name{font-weight:700}
+    .chat-sub{font-size:12px;color:var(--muted);opacity:0.9}
+
+    /* MAIN */
+    .main{display:flex;flex-direction:column;gap:12px;height:100%;min-height:0}
+    .main-header{display:flex;justify-content:space-between;align-items:center;padding:10px;border-radius:10px;background:linear-gradient(180deg,rgba(255,255,255,0.01),transparent);border:1px solid rgba(255,0,0,0.03);flex-shrink:0}
+    .chat-info{display:flex;gap:12px;align-items:center}
+    .members-preview{display:flex;gap:6px;align-items:center}
+    .member-small{width:28px;height:28px;border-radius:8px;display:grid;place-items:center;font-size:12px;background:linear-gradient(180deg,#ffb3b3,#cc0000)}
+
+    .mensajes{flex:1;Overflow-y:auto;overflow-x:hidden;padding:18px;display:flex;flex-direction:column;gap:12px;background:linear-gradient(180deg,rgba(0,0,0,0.02),transparent);border-radius:10px}
+    .mensajes::-webkit-scrollbar{width:8px}
+    .mensajes::-webkit-scrollbar-track{background:rgba(255,0,0,0.05);border-radius:10px}
+    .mensajes::-webkit-scrollbar-thumb{background:linear-gradient(180deg,#ff3a3a,#b20000);border-radius:10px}
+    .mensajes::-webkit-scrollbar-thumb:hover{background:linear-gradient(180deg,#ff5555,#d20000)}
+    .mensaje-wrap{display:flex;flex-direction:column;gap:6px;max-width:75%}
+    .mensaje{padding:12px;border-radius:12px;background:rgba(40,0,0,0.6);box-shadow:0 6px 20px rgba(0,0,0,0.6);font-family:'Share Tech Mono';white-space:pre-wrap}
+    .izq{align-self:flex-start;border-left:4px solid #aa0000}
+    .der{align-self:flex-end;background:linear-gradient(145deg,#440000,#6a0000);border-right:4px solid #ff5555}
+    .sender{font-size:12px;color:#ffdede}
+    .timestamp{font-size:11px;color:#ffbdbd;opacity:0.8}
+
+    .input-area{display:flex;gap:8px;padding:12px;border-top:1px solid rgba(255,0,0,0.04);align-items:center;border-radius:10px;background:linear-gradient(180deg,rgba(255,255,255,0.01),transparent)}
+    textarea#inputMensaje{flex:1;padding:12px;border-radius:10px;border:1px solid rgba(255,0,0,0.06);background:#120000;color:#ffdede;font-family:'Share Tech Mono';resize:none;height:64px;outline:none}
+    .actions{display:flex;gap:8px}
+
+    /* Modals */
+    .modal{position:fixed;inset:0;display:grid;place-items:center;background:linear-gradient(180deg,rgba(0,0,0,0.6),rgba(0,0,0,0.72));z-index:9999}
+    .modal .card{min-width:320px}
+    .member-list{display:flex;flex-direction:column;gap:8px;max-height:260px;overflow:auto;padding:8px}
+    .member-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:8px;border-radius:8px;background:rgba(255,255,255,0.02)}
+
+    /* Small helpers */
+    .muted{color:var(--muted);font-size:13px}
+    .tiny{font-size:12px;color:#ffbcbc}
+
+    /* responsive */
+    @media(max-width:920px){
+      .wrap{grid-template-columns:1fr;grid-template-rows:240px 1fr;padding:12px}
+      .sidebar{height:220px;overflow:auto}
+    }
+
+    /* little entrance animations */
+    .fade-in{animation:fadeIn .36s ease both}
+    @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
   </style>
+  
+  <!-- ⭐ SOCKET.IO CLIENT CDN ⭐ -->
+  <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
 </head>
 <body>
+  <canvas id="proc-bg" aria-hidden="true"></canvas>
 
-  <button id="btnVolver" class="btn-back" title="Volver">← Volver</button>
+  <div class="wrap" role="application">
 
-  <div class="sidebar">
-    <div class="header">
-      <span>🔥 Tus Invocaciones</span>
-      <button id="btnCreateGroup" title="Crear Grupo" class="btn-add">+</button>
-    </div>
-    <div class="chat-list" id="chatList">
-      <div class="placeholder">Invocando archivos JSON...</div>
-    </div>
+    <aside class="sidebar card" aria-label="Lista de chats">
+      <div class="brand">
+        <div class="logo">SI</div>
+        <div class="meta">
+          <div class="title">Salas del Infierno</div>
+          <div class="sub">Tus conversaciones – versión fuego</div>
+        </div>
+      </div>
+
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:12px">
+        <div class="search" role="search" aria-label="Buscar chats">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M21 21l-4.35-4.35" stroke="#ff9b9b" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path><circle cx="11" cy="11" r="6" stroke="#ff9b9b" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></circle></svg>
+          <input id="searchChats" placeholder="Buscar chats o miembros" />
+        </div>
+        <div style="display:flex;gap:8px;flex-shrink:0">
+          <button id="btnCreateGroup" class="btn">+ Grupo</button>
+          <button id="btnVolver" class="btn">← Volver</button>
+        </div>
+      </div>
+
+      <div class="chat-list" id="chatList" aria-live="polite">
+        <div class="card" style="background:transparent;border:0;color:#ff9999">Cargando chats…</div>
+      </div>
+    </aside>
+
+    <main class="main">
+      <div class="main-header card">
+        <div style="display:flex;gap:12px;align-items:center" class="chat-info">
+          <div id="activeAvatar" class="avatar">—</div>
+          <div>
+            <div id="chatTitleText" style="font-weight:800">Selecciona un chat...</div>
+            <div id="chatSubtitle" class="muted tiny">Aquí verás el estado y miembros</div>
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <div class="members-preview" id="membersPreview"></div>
+          <button id="btnMembers" class="btn-ghost">Ver miembros</button>
+          <button id="btnLeave" class="btn-ghost" title="Salir del grupo">Salir</button>
+        </div>
+      </div>
+
+      <div class="mensajes card" id="mensajesContenedor" aria-live="polite">
+        <div class="placeholder muted">Aquí se mostrará la conversación.</div>
+      </div>
+
+      <div class="input-area card" id="inputAreaContainer" aria-hidden="true" style="display:none">
+        <textarea id="inputMensaje" placeholder="Escribe tu mensaje... (Enter para enviar, Shift+Enter nueva línea)"></textarea>
+        <div class="actions">
+          <button id="emojiBtn" class="btn-ghost">😊</button>
+          <button id="sendBtn" class="btn">Enviar</button>
+        </div>
+      </div>
+    </main>
   </div>
 
-  <div class="main">
-    <div class="main-header" id="chatTitle">
-      <div id="chatTitleText">Selecciona un chat...</div>
-      <div class="actions" id="chatActions"></div>
-    </div>
-
-    <div class="mensajes" id="mensajesContenedor">
-      <div class="placeholder">Aquí se mostrará la conversación maldita.</div>
-    </div>
-
-    <div id="inputAreaContainer" class="input-area-container">
-      <textarea id="inputMensaje" placeholder="Escribe tu mensaje..."></textarea>
-      <button onclick="enviarMensaje()">Enviar</button>
-    </div>
-  </div>
-
-  <div id="modalRoot" style="display:none;"></div>
+  <div id="modalRoot" style="display:none"></div>
+  <div id="mensaje" role="status" aria-live="polite"></div>
 
   <script>
-  verificarID(() => {
-    const userId = sessionStorage.getItem('userId');
-    let datosChats = [];
-    let chatActual = null;
-    let usuariosGlobal = [];
+    const API_BASE = 'http://localhost:3000';
 
-    const chatList = document.getElementById("chatList");
-    const mensajesContenedor = document.getElementById("mensajesContenedor");
-    const chatTitleText = document.getElementById("chatTitleText");
-    const chatActions = document.getElementById("chatActions");
-    const modalRoot = document.getElementById("modalRoot");
-    const btnVolver = document.getElementById('btnVolver');
+    /* --- Animated procedural background (fractal-like, lightweight) --- */
+    (function(){
+      const canvas = document.getElementById('proc-bg'), ctx = canvas.getContext('2d');
+      let w,h,dpr=Math.min(window.devicePixelRatio||1,2), t0=performance.now();
+      function resize(){ w=innerWidth; h=innerHeight; canvas.width=Math.round(w*dpr); canvas.height=Math.round(h*dpr); canvas.style.width=w+'px'; canvas.style.height=h+'px'; ctx.setTransform(dpr,0,0,dpr,0,0); }
+      window.addEventListener('resize', resize); resize();
+      function loop(now){ const t=(now-t0)*0.001; ctx.clearRect(0,0,w,h); // simple moving radial gradients + noise overlay
+        const grd = ctx.createLinearGradient(0,0,w,h); grd.addColorStop(0, '#120000'); grd.addColorStop(1, '#050000'); ctx.fillStyle = grd; ctx.fillRect(0,0,w,h);
+        // glowing orbs
+        for(let i=0;i<12;i++){ const x = (Math.sin(t*0.3 + i)*0.5+0.5)*w; const y = (Math.cos(t*0.27 + i*1.3)*0.5+0.5)*h; const r = 80 + (i*6)%100; const g = ctx.createRadialGradient(x,y,r*0.1,x,y,r); g.addColorStop(0, 'rgba(255,58,58,0.08)'); g.addColorStop(1, 'rgba(0,0,0,0)'); ctx.fillStyle = g; ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2); ctx.fill(); }
+        // subtle vignette
+        ctx.fillStyle='rgba(0,0,0,0.25)'; ctx.fillRect(0,0,w,h);
+        requestAnimationFrame(loop);
+      }
+      requestAnimationFrame(loop);
+    })();
 
-    btnVolver.addEventListener('click', () => {
-      if (window.history.length > 1) window.history.back();
-      else location.href = 'tienda.html';
-    });
+    /* --- Helpers UI --- */
+    function showToast(text, ms=3000){ const el=document.getElementById('mensaje'); el.textContent=text; el.classList.add('show'); el.style.opacity=1; setTimeout(()=>{ el.style.opacity=0; }, ms); }
 
-    const seenMessagesByChat = new Map();
-    let fetchingMessages = false;
+    verificarID(()=> {
+      const userId = sessionStorage.getItem('userId');
+      if (!userId) { showToast('No hay sesión. Volviendo.'); setTimeout(()=> location.href='index.html',900); return; }
 
-    document.getElementById('btnCreateGroup').addEventListener('click', showCreateGroupModal);
+      const chatList = document.getElementById('chatList');
+      const mensajesCont = document.getElementById('mensajesContenedor');
+      const chatTitleText = document.getElementById('chatTitleText');
+      const chatSubtitle = document.getElementById('chatSubtitle');
+      const inputArea = document.getElementById('inputAreaContainer');
+      const inputMsg = document.getElementById('inputMensaje');
+      const membersPreview = document.getElementById('membersPreview');
+      const activeAvatar = document.getElementById('activeAvatar');
 
-    function cargarChats() {
-      return fetch('/obtener-chats', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId })
-      })
-      .then(async res => {
-        if (!res.ok) {
-          const text = await res.text().catch(()=>'<no body>');
-          console.error('Error HTTP /obtener-chats', res.status, text);
-          document.getElementById('chatList').innerHTML = `<div class="placeholder">Error servidor ${res.status}</div>`;
-          return { ok: false, chats: [] };
+      let datosChats = [], chatActual = null, usuariosGlobal = [];
+
+      // ========== ⭐ SOCKET.IO TIEMPO REAL ⭐ ==========
+      const socket = io(API_BASE, { 
+        transports: ['websocket', 'polling'],
+        reconnection: true,
+        reconnectionDelay: 1000
+      });
+
+      socket.on('connect', () => {
+        console.log('✅ Socket conectado:', socket.id);
+        showToast('🔥 Conectado en tiempo real');
+      });
+
+      socket.on('disconnect', () => {
+        console.log('❌ Socket desconectado');
+        showToast('Conexión perdida. Reconectando...');
+      });
+
+      socket.on('connect_error', (err) => {
+        console.error('⚠️ Error de conexión socket:', err);
+      });
+
+      // Escuchar mensajes nuevos en tiempo real
+      socket.on('recibirMensaje', (msg) => {
+        console.log('📨 Mensaje recibido en tiempo real:', msg);
+        
+        if (chatActual && msg) {
+          // Evitar duplicados
+          const existe = chatActual.mensajes.some(m => m.id === msg.id);
+          if (!existe) {
+            chatActual.mensajes.push(msg);
+            const elem = crearMensajeElemento(msg);
+            mensajesCont.appendChild(elem);
+            // Scroll automático al final
+            requestAnimationFrame(() => {
+              mensajesCont.scrollTop = mensajesCont.scrollHeight;
+            });
+          }
         }
-        return res.json();
-      })
-      .then(data => {
-        if (!data) return { ok: false, chats: [] };
-        if (data.ok) {
+      });
+
+      // Actualizar lista de chats cuando hay cambios
+      socket.on('chat:update', (data) => {
+        console.log('🔄 Chat actualizado:', data);
+        cargarChats();
+      });
+
+      // Miembros actualizados
+      socket.on('chat:membersUpdated', (data) => {
+        console.log('👥 Miembros actualizados:', data);
+        if (chatActual && chatActual.id === data.chatId) {
+          chatActual.miembros = data.miembros;
+          renderMembersPreview(chatActual);
+          if (data.sysMsg) {
+            chatActual.mensajes.push(data.sysMsg);
+            mensajesCont.appendChild(crearMensajeElemento(data.sysMsg));
+          }
+        }
+      });
+
+      // Miembro salió
+      socket.on('chat:memberLeft', (data) => {
+        console.log('🚪 Miembro salió:', data);
+        if (chatActual && chatActual.id === data.chatId) {
+          chatActual.miembros = chatActual.miembros.filter(m => m !== data.usuario);
+          renderMembersPreview(chatActual);
+          if (data.sysMsg) {
+            chatActual.mensajes.push(data.sysMsg);
+            mensajesCont.appendChild(crearMensajeElemento(data.sysMsg));
+          }
+        }
+      });
+
+      // Chat renombrado
+      socket.on('chat:renamed', (data) => {
+        console.log('✏️ Chat renombrado:', data);
+        if (chatActual && chatActual.id === data.chatId) {
+          chatActual.displayName = data.displayName;
+          chatTitleText.textContent = data.displayName;
+        }
+        cargarChats();
+      });
+      // ========== FIN SOCKET.IO ==========
+
+      document.getElementById('btnVolver').addEventListener('click', ()=> location.href='tienda.html');
+      document.getElementById('btnCreateGroup').addEventListener('click', showCreateGroupModal);
+      document.getElementById('sendBtn').addEventListener('click', enviarMensaje);
+      document.getElementById('btnMembers').addEventListener('click', ()=> openMembersModal(chatActual));
+      document.getElementById('btnLeave').addEventListener('click', ()=> confirmLeaveGroup(chatActual));
+
+      document.getElementById('searchChats').addEventListener('input', (e)=> renderChatList(e.target.value));
+
+      inputMsg.addEventListener('keydown', (e)=>{
+        if (e.key === 'Enter' && !e.shiftKey){ e.preventDefault(); enviarMensaje(); }
+      });
+
+      async function safeFetch(url, options){
+        try{
+          const fullUrl = url.startsWith('/') ? (API_BASE + url) : url;
+          const res = await fetch(fullUrl, options);
+          if (res.status === 404) throw { code:404, message:`Endpoint not found: ${url}` };
+          const ct = res.headers.get('content-type')||'';
+          if (!res.ok) { if (ct.includes('application/json')){ const j=await res.json(); throw j; } else { throw { message:'Server error', status: res.status }; } }
+          if (ct.includes('application/json')) return res.json();
+          return res.text();
+        } catch(e){ throw e; }
+      }
+
+      /* --- Data loading --- */
+      async function cargarChats(){
+        try{
+          const data = await safeFetch('/obtener-chats', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ userId }) });
+          if (!data || !data.ok) { chatList.innerHTML = '<div class="card">No hay chats.</div>'; return; }
           datosChats = data.chats || [];
-          mostrarChats();
-          return { ok: true, chats: datosChats };
-        } else {
-          document.getElementById('chatList').innerHTML = `<div class="placeholder">Error: ${data.error}</div>`;
-          return { ok: false, chats: [] };
-        }
-      })
-      .catch(err => {
-        console.error("Error de red (cargarChats):", err);
-        return { ok: false, chats: [] };
-      });
-    }
-
-    function obtenerUsuariosCache() {
-      if (usuariosGlobal.length) return Promise.resolve(usuariosGlobal);
-      return fetch('/obtener-usuarios', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId })
-      })
-      .then(async r => {
-        if (!r.ok) {
-          const text = await r.text().catch(()=>'<no body>');
-          console.error('obtener-usuarios HTTP', r.status, text);
-          throw new Error(`HTTP ${r.status}: ${text}`);
-        }
-        return r.json();
-      })
-      .then(d => {
-        if (d && d.ok && Array.isArray(d.usuarios)) {
-          usuariosGlobal = d.usuarios;
-          return usuariosGlobal;
-        }
-        return [];
-      })
-      .catch(err => {
-        console.error("Error al obtener usuarios:", err);
-        return [];
-      });
-    }
-
-    function mostrarChats() {
-      chatList.innerHTML = "";
-      if (!datosChats || datosChats.length === 0) {
-        chatList.innerHTML = '<div class="placeholder">No hay chats aún.</div>';
-        return;
+          renderChatList();
+        } catch(err){ console.error('cargarChats err', err); chatList.innerHTML = `<div class="card">Error cargando chats. Revisa servidor.</div>`; }
       }
 
-      datosChats.forEach(chat => {
-        const item = document.createElement("div");
-        item.className = "chat-item";
+      function avatarFromName(name){ if(!name) return '??'; return name.split(' ').map(s=>s[0]).slice(0,2).join('').toUpperCase(); }
 
-        const miembros = chat.miembros && Array.isArray(chat.miembros)
-                        ? chat.miembros
-                        : (typeof chat.chat === 'string' ? chat.chat.split(' - ').map(s=>s.trim()) : []);
-
-        const nombreVisible = chat.displayName || chat.chat || miembros.join(' - ');
-
-        const left = document.createElement('div');
-        left.style.display='flex';
-        left.style.flexDirection='column';
-        const title = document.createElement('div');
-        title.innerText = nombreVisible;
-        const meta = document.createElement('div');
-        meta.className='chat-meta';
-        meta.innerText = miembros.length >= 3 ? `Grupo · ${miembros.length} miembros` : `Chat · ${miembros.length} personas`;
-
-        left.appendChild(title);
-        left.appendChild(meta);
-
-        item.appendChild(left);
-
-        const right = document.createElement('div');
-        right.style.minWidth='70px';
-        right.style.textAlign='right';
-        const lastMsg = (chat.mensajes && chat.mensajes.length) ? chat.mensajes[chat.mensajes.length-1] : null;
-        if (lastMsg) {
-          const preview = document.createElement('div');
-          preview.className='small';
-          preview.innerText = (lastMsg.mensaje.length>24?lastMsg.mensaje.slice(0,24)+'…': lastMsg.mensaje);
-          right.appendChild(preview);
-        }
-        item.appendChild(right);
-
-        item.onclick = () => seleccionarChat(chat);
-        chatList.appendChild(item);
-      });
-    }
-
-    function seleccionarChat(chatObj) {
-      const inputArea = document.getElementById("inputAreaContainer");
-
-      const encontrado = datosChats.find(c => {
-        if (c.id && chatObj.id) return c.id === chatObj.id;
-        return (c.chat === chatObj.chat);
-      });
-
-      if (!encontrado) {
-        inputArea.classList.remove("visible");
-        return;
-      }
-
-      inputArea.classList.add("visible");
-      chatActual = encontrado;
-      const miembros = getMembers(chatActual);
-      chatTitleText.innerText = (chatActual.displayName || chatActual.chat || miembros.join(' - '));
-      mensajesContenedor.innerHTML = "";
-
-      renderChatActions(chatActual);
-
-      const chatKey = chatActual.id || chatActual.chat || getMembers(chatActual).join(' - ');
-      const setSeen = new Set();
-      (chatActual.mensajes || []).forEach((m, idx) => {
-        const key = buildMessageKey(m, idx);
-        setSeen.add(key);
-      });
-      seenMessagesByChat.set(chatKey, setSeen);
-
-      if (window.__intervalChat) clearInterval(window.__intervalChat);
-      actualizarMensajes(true);
-      window.__intervalChat = setInterval(() => actualizarMensajes(false), 1000);
-    }
-
-    function getMembers(chat) {
-      if (!chat) return [];
-      if (Array.isArray(chat.miembros) && chat.miembros.length) return chat.miembros;
-      if (typeof chat.chat === 'string') return chat.chat.split(' - ').map(s=>s.trim()).filter(Boolean);
-      return [];
-    }
-
-    function renderChatActions(chat) {
-      chatActions.innerHTML = '';
-      const miembros = getMembers(chat);
-      const btnAdd = document.createElement('button');
-      btnAdd.className = 'btn-add';
-      btnAdd.innerText = 'Añadir';
-      btnAdd.title = 'Añadir persona al chat (o convertir en grupo)';
-      btnAdd.onclick = (e) => { e.stopPropagation(); showAddMembersModal(chat); };
-      chatActions.appendChild(btnAdd);
-
-      if (miembros.length >= 3) {
-        const btnRename = document.createElement('button');
-        btnRename.className = 'btn-add';
-        btnRename.innerText = 'Renombrar';
-        btnRename.title = 'Cambiar nombre del grupo';
-        btnRename.onclick = (e) => { e.stopPropagation(); showRenameModal(chat); };
-        chatActions.appendChild(btnRename);
-      }
-    }
-
-    async function actualizarMensajes(forzarTodo = false) {
-      if (!chatActual) return;
-      if (fetchingMessages) return;
-      fetchingMessages = true;
-
-      try {
-        const res = await fetch('/obtener-chats', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ userId })
+      function renderChatList(filter=''){
+        chatList.innerHTML = '';
+        const filtro = (filter||'').toLowerCase();
+        const list = datosChats.filter(c=>{
+          if (!filtro) return true;
+          if ((c.displayName||'').toLowerCase().includes(filtro)) return true;
+          if (Array.isArray(c.miembros) && c.miembros.join(' ').toLowerCase().includes(filtro)) return true;
+          return false;
         });
-        const data = await res.json();
-        if (!data.ok) return;
-        const actualizado = data.chats.find(c => {
-          if (chatActual.id && c.id) return c.id === chatActual.id;
-          return c.chat === chatActual.chat;
+        if (!list.length) { chatList.innerHTML = '<div class="card">No hay chats que coincidan.</div>'; return; }
+        list.forEach(c=>{
+          const item = document.createElement('div'); item.className='chat-item fade-in' + (chatActual && chatActual.id===c.id ? ' active':'');
+          const ava = document.createElement('div'); ava.className='avatar'; ava.textContent = avatarFromName(c.displayName || (Array.isArray(c.miembros)?c.miembros[0]:'Chat'));
+          const meta = document.createElement('div'); meta.className='chat-meta';
+          const title = document.createElement('div'); title.className='chat-name'; title.textContent = c.displayName || c.chat || (Array.isArray(c.miembros)?c.miembros.join(' - '):'Chat');
+          const sub = document.createElement('div'); sub.className='chat-sub'; sub.textContent = Array.isArray(c.miembros) ? `${c.miembros.length} miembros • ${c.mensajes?c.mensajes.length:0} mensajes` : '';
+          meta.appendChild(title); meta.appendChild(sub);
+          item.appendChild(ava); item.appendChild(meta);
+          item.onclick = ()=> seleccionarChat(c);
+          chatList.appendChild(item);
         });
-        if (!actualizado) return;
-
-        const nuevosMensajes = actualizado.mensajes || [];
-        const chatKey = actualizado.id || actualizado.chat || getMembers(actualizado).join(' - ');
-
-        if (forzarTodo) {
-          mensajesContenedor.innerHTML = "";
-          const setSeen = new Set();
-          nuevosMensajes.forEach((msg, idx) => {
-            const key = buildMessageKey(msg, idx);
-            setSeen.add(key);
-            const elem = crearMensajeElemento(msg, actualizado, key);
-            mensajesContenedor.appendChild(elem);
-          });
-          seenMessagesByChat.set(chatKey, setSeen);
-          mensajesContenedor.scrollTop = mensajesContenedor.scrollHeight;
-        } else {
-          const setSeen = seenMessagesByChat.get(chatKey) || new Set();
-          nuevosMensajes.forEach((msg, idx) => {
-            const key = buildMessageKey(msg, idx);
-            if (!setSeen.has(key)) {
-              setSeen.add(key);
-              const elem = crearMensajeElemento(msg, actualizado, key);
-              mensajesContenedor.appendChild(elem);
-              mensajesContenedor.scrollTop = mensajesContenedor.scrollHeight;
-            }
-          });
-          seenMessagesByChat.set(chatKey, setSeen);
-        }
-
-        chatActual = actualizado;
-      } catch (err) {
-        console.error("❌ Error al actualizar mensajes:", err);
-      } finally {
-        fetchingMessages = false;
       }
-    }
 
-    function buildMessageKey(msg, idxFallback=0) {
-      const id = msg.id || msg._id || null;
-      const ts = msg.timestamp || msg.ts || msg.time || null;
-      if (id) return `id::${id}`;
-      if (ts) return `ts::${msg.de || 'x'}::${ts}::${hashString(msg.mensaje || '')}`;
-      return `fallback::${msg.de || 'x'}::${hashString(msg.mensaje || '')}::${idxFallback}`;
-    }
+      function getMembers(chat){ if (!chat) return []; if (Array.isArray(chat.miembros) && chat.miembros.length) return chat.miembros; if (typeof chat.chat === 'string') return chat.chat.split(' - ').map(s=>s.trim()); return []; }
 
-    function hashString(s) {
-      let h = 0;
-      for (let i=0;i<s.length;i++){ h = ((h<<5)-h) + s.charCodeAt(i); h |= 0; }
-      return Math.abs(h).toString(36);
-    }
+      function seleccionarChat(c){
+        chatActual = datosChats.find(d => (d.id && c.id && d.id===c.id) || (d.chat && d.chat === c.chat)) || c;
+        if (!chatActual) { showToast('Chat no disponible'); return; }
+        
+        chatTitleText.textContent = chatActual.displayName || chatActual.chat || getMembers(chatActual).join(' - ');
+        chatSubtitle.textContent = chatActual.topic || (getMembers(chatActual).length + ' miembros');
+        activeAvatar.textContent = avatarFromName(chatActual.displayName || getMembers(chatActual)[0] || '—');
+        renderMessages(chatActual);
+        inputArea.setAttribute('aria-hidden','false'); inputArea.style.display = 'flex';
+        renderMembersPreview(chatActual);
+        renderChatList(document.getElementById('searchChats').value);
+        
+        // ⭐ UNIRSE AL ROOM DE SOCKET.IO ⭐
+        if (socket && chatActual.id) {
+          socket.emit('joinChat', { chatId: chatActual.id });
+          console.log('🚪 Unido al room:', chatActual.id);
+        }
+      }
 
-    function crearMensajeElemento(msg, chatObj, key) {
-      const divWrap = document.createElement('div');
-      const miembros = getMembers(chatObj);
+      function crearMensajeElemento(msg){
+        const wrap = document.createElement('div'); wrap.className='mensaje-wrap';
+        const sender = document.createElement('div'); sender.className='sender';
+        sender.textContent = msg.de === userId ? 'Tú' : (msg.nombre || msg.de);
+        const bubble = document.createElement('div'); bubble.className='mensaje ' + (msg.de===userId ? 'der' : 'izq'); bubble.innerText = msg.mensaje;
+        const ts = document.createElement('div'); ts.className='timestamp'; ts.textContent = new Date(msg.timestamp || Date.now()).toLocaleString();
+        wrap.appendChild(sender); wrap.appendChild(bubble); wrap.appendChild(ts);
+        return wrap;
+      }
 
-      let nombreRemitente = msg.de;
-      if (Array.isArray(miembros) && miembros.length) {
-        const found = miembros.find(m => {
-          if (typeof m === 'object' && m.id) return m.id === msg.de;
-          return m === msg.de;
+      function renderMessages(chat){
+        mensajesCont.innerHTML = '';
+        const msgs = (chat.mensajes||[]).slice(-200);
+        if (!msgs.length) mensajesCont.innerHTML = '<div class="muted">No hay mensajes en este chat. Sé el primero.</div>';
+        msgs.forEach(m=> mensajesCont.appendChild(crearMensajeElemento(m)));
+        // Scroll al final después de renderizar
+        requestAnimationFrame(() => {
+          mensajesCont.scrollTop = mensajesCont.scrollHeight;
         });
-        if (found) {
-          nombreRemitente = (typeof found === 'object' && found.nombre) ? found.nombre : (typeof found === 'string' ? found : msg.de);
-        } else {
-          const u = usuariosGlobal.find(x=> x.id === msg.de);
-          if (u) nombreRemitente = u.nombre || u.id;
-        }
-      } else {
-        const u = usuariosGlobal.find(x=> x.id === msg.de);
-        if (u) nombreRemitente = u.nombre || u.id;
       }
 
-      const senderLabel = document.createElement('div');
-      senderLabel.className = 'sender';
-      senderLabel.innerText = nombreRemitente === userId ? 'Tú' : nombreRemitente;
-
-      const bubble = document.createElement('div');
-      bubble.className = 'mensaje';
-      bubble.classList.add('izq');
-      if (msg.de === userId) {
-        bubble.classList.remove('izq');
-        bubble.classList.add('der');
+      async function enviarMensaje(){
+        if (!chatActual) return showToast('Selecciona un chat');
+        const texto = inputMsg.value.trim(); if (!texto) return;
+        const nuevo = { de: userId, mensaje: texto, timestamp: Date.now() };
+        
+        // Añadir mensaje localmente primero (optimistic UI)
+        chatActual.mensajes = chatActual.mensajes || []; 
+        chatActual.mensajes.push(nuevo);
+        const elem = crearMensajeElemento(nuevo);
+        mensajesCont.appendChild(elem);
+        
+        // Scroll automático al final
+        requestAnimationFrame(() => {
+          mensajesCont.scrollTop = mensajesCont.scrollHeight;
+        });
+        
+        inputMsg.value = '';
+        
+        try {
+          await safeFetch('/guardar-mensaje', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ chatId: chatActual.id, de: userId, mensaje: texto }) });
+          // El servidor ya emitirá por socket, no necesitamos refresh
+        } catch(e){ 
+          console.error('guardar-mensaje err', e); 
+          showToast('No se pudo enviar mensaje');
+          // Remover mensaje si falló
+          chatActual.mensajes.pop();
+          renderMessages(chatActual);
+        }
       }
-      bubble.innerText = msg.mensaje;
-      if (key) bubble.dataset.msgkey = key;
 
-      divWrap.appendChild(senderLabel);
-      divWrap.appendChild(bubble);
-      return divWrap;
-    }
+      async function obtenerUsuariosCache(){
+        try { const res = await safeFetch('/obtener-usuarios', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ userId }) }); if (res && res.ok) usuariosGlobal = res.usuarios || []; } catch(e){ console.warn('no users', e); usuariosGlobal=[]; }
+      }
 
-    // ------------------------
-    // NUEVA FUNCIONALIDAD: extraer contactos con los que YA tienes chats
-    // ------------------------
-    function getContactsForUser() {
-      const contactosIds = new Set();
-      datosChats.forEach(chat => {
-        if (!Array.isArray(chat.miembros)) return;
-        if (chat.miembros.includes(userId)) {
-          chat.miembros.forEach(m => { if (m !== userId) contactosIds.add(m); });
-        }
-      });
-      const contactos = Array.from(contactosIds).map(id => {
-        const u = usuariosGlobal.find(x => x.id === id);
-        return { id, nombre: (u && (u.nombre || u.id)) || id };
-      }).sort((a,b) => a.nombre.localeCompare(b.nombre, 'es'));
-      return contactos;
-    }
+      const modalRoot = document.getElementById('modalRoot');
+      function openModal(html){ modalRoot.style.display='block'; modalRoot.innerHTML = `<div class="modal"><div class="card">${html}</div></div>`; return modalRoot.querySelector('.card'); }
+      function closeModal(){ modalRoot.style.display='none'; modalRoot.innerHTML=''; }
 
-    // Modal helper
-    function openModal(htmlContent, onClose) {
-      modalRoot.style.display = 'block';
-      modalRoot.innerHTML = '';
-      const modal = document.createElement('div');
-      modal.className = 'modal';
-      modal.innerHTML = `<div class="card">${htmlContent}</div>`;
-      modalRoot.appendChild(modal);
-      modal.addEventListener('click', (e)=>{ if (e.target===modal) { closeModal(); if (onClose) onClose(); }});
-      return modalRoot.querySelector('.card');
-    }
-    function closeModal() { modalRoot.style.display='none'; modalRoot.innerHTML=''; }
+      function getContactsForUser(){
+        const ids = new Set();
+        datosChats.forEach(ch => { if (Array.isArray(ch.miembros) && ch.miembros.includes(userId)) ch.miembros.forEach(m => { if (m !== userId) ids.add(m); }); });
+        usuariosGlobal.forEach(u=> ids.add(u.id));
+        return Array.from(ids).map(id => ({ id, nombre: id }));
+      }
 
-    // ---------- CREAR GRUPO: ahora solo muestra contactos ----------
-    function showCreateGroupModal() {
-      Promise.all([obtenerUsuariosCache(), cargarChats()]).then(() => {
-        const contactos = getContactsForUser();
-        const html = `
-          <h3>Crear Grupo</h3>
-          <label class="small">Nombre del grupo (opcional):</label>
-          <input id="newGroupName" style="width:100%;padding:8px;margin-top:6px;border-radius:6px;border:1px solid #4a0000;background:#110000;color:#ffdede" placeholder="Nombre del grupo...">
-          <div class="small" style="margin-top:10px">Selecciona usuarios (solo contactos con los que ya tienes chat):</div>
-          <div class="user-list" id="modalUserList"></div>
-          <div style="display:flex;gap:8px;margin-top:12px;justify-content:flex-end">
-            <button id="cancelCreate" class="btn-add">Cancelar</button>
-            <button id="confirmCreate" class="btn-add">Crear</button>
-          </div>
-        `;
-        const card = openModal(html);
-        const userList = card.querySelector('#modalUserList');
+      function showCreateGroupModal(){
+        Promise.all([obtenerUsuariosCache(), cargarChats()]).then(()=> {
+          const contacts = getContactsForUser();
+          const html = `<h3>Crear Grupo</h3><div class="small">Contactos</div><div id="contactList" style="max-height:240px;overflow:auto;margin-top:8px"></div><div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px"><button id="cancelCreate" class="btn-ghost">Cancelar</button><button id="confirmCreate" class="btn">Crear</button></div>`;
+          const card = openModal(html); const list = card.querySelector('#contactList');
+          if (!contacts.length) list.innerHTML = '<div class="muted">Sin contactos</div>'; else contacts.forEach(c => { const row = document.createElement('label'); row.style.display='flex'; row.style.justifyContent='space-between'; row.style.padding='6px'; row.style.background='rgba(255,255,255,0.02)'; row.style.marginBottom='6px'; row.innerHTML = `<span>${c.nombre}</span><input type="checkbox" data-uid="${c.id}">`; list.appendChild(row); });
+          card.querySelector('#cancelCreate').onclick = closeModal;
+          card.querySelector('#confirmCreate').onclick = async () => {
+            const selected = Array.from(card.querySelectorAll('input[type=checkbox]:checked')).map(cb => cb.dataset.uid);
+            if (!selected.length) return alert('Selecciona al menos uno');
+            const miembros = Array.from(new Set([userId, ...selected]));
+            try {
+              const created = await safeFetch('/crear-grupo',{ method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ creador: userId, miembros, displayName: 'Grupo' }) });
+              if (created && created.ok) { closeModal(); showToast('Grupo creado'); cargarChats(); } else alert('Error creando grupo');
+            } catch(e){ console.error(e); alert('Error de red'); }
+          };
+        });
+      }
 
-        if (!contactos || contactos.length === 0) {
-          userList.innerHTML = '<div class="small">No tienes contactos de chat para crear un grupo.</div>';
-        } else {
-          contactos.forEach(u=> {
-            const item = document.createElement('label');
-            item.className='user-item';
-            item.innerHTML = `<span>${u.nombre}</span><input type="checkbox" data-uid="${u.id}">`;
-            userList.appendChild(item);
-          });
-        }
+      function renderMembersPreview(chat){
+        membersPreview.innerHTML='';
+        const members = getMembers(chat).slice(0,5);
+        members.forEach(m=>{ const el=document.createElement('div'); el.className='member-small'; el.textContent=avatarFromName(m); el.title = m; el.onclick = ()=> showToast('Usuario: '+m); membersPreview.appendChild(el); });
+        if (getMembers(chat).length > 5){ const more = document.createElement('div'); more.className='tiny muted'; more.textContent = `+${getMembers(chat).length - 5}`; membersPreview.appendChild(more); }
+      }
 
-        card.querySelector('#cancelCreate').onclick = () => closeModal();
-        card.querySelector('#confirmCreate').onclick = () => {
-          const selected = Array.from(userList.querySelectorAll('input[type=checkbox]:checked')).map(cb=>cb.dataset.uid);
-          if (selected.length === 0) { alert('Selecciona al menos a una persona para crear un grupo.'); return; }
-          const miembros = Array.from(new Set([userId, ...selected]));
-          const displayName = card.querySelector('#newGroupName').value.trim();
-
-          fetch('/crear-grupo', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ creador: userId, miembros, displayName })
-          })
-          .then(async res => {
-            if (!res.ok) {
-              const t = await res.text().catch(()=>'<no body>');
-              throw new Error(`HTTP ${res.status}: ${t}`);
-            }
-            return res.json();
-          })
-          .then(d => {
-            if (d.ok) {
-              closeModal();
-              cargarChats();
-            } else {
-              alert('Error al crear grupo: ' + (d.error || 'error'));
-            }
-          })
-          .catch(err=>{
-            console.error('Error crear grupo', err);
-            alert('Error de red al crear grupo.');
-          });
+      function openMembersModal(chat){ if (!chat) return showToast('Selecciona un chat');
+        const members = getMembers(chat);
+        const html = `<h3>Miembros – ${chat.displayName || chat.chat || 'Grupo'}</h3><div class="member-list" id="memberList"></div><div style="display:flex;gap:8px;justify-content:space-between;margin-top:12px"><div style="display:flex;gap:8px"><input id="newMemberId" placeholder="ID usuario a añadir" style="padding:8px;border-radius:8px;background:var(--glass);border:1px solid rgba(255,255,255,0.02);color:var(--muted)"></div><div><button id="cancelMembers" class="btn-ghost">Cerrar</button><button id="addMemberBtn" class="btn">Añadir</button></div></div>`;
+        const card = openModal(html); const list = card.querySelector('#memberList');
+        members.forEach(m=>{
+          const row = document.createElement('div'); row.className='member-row'; row.innerHTML = `<div style="display:flex;gap:12px;align-items:center"><div style='width:40px;height:40px;border-radius:8px;display:grid;place-items:center;background:linear-gradient(180deg,#ffb3b3,#cc0000);color:#111;font-weight:700'>${avatarFromName(m)}</div><div>${m}</div></div><div><button data-uid='${m}' class='btn-ghost small'>Ver</button></div>`;
+          list.appendChild(row);
+        });
+        card.querySelector('#cancelMembers').onclick = closeModal;
+        card.querySelector('#addMemberBtn').onclick = async ()=>{ 
+          const newId = card.querySelector('#newMemberId').value.trim(); if (!newId) return alert('Escribe un ID');
+          await addMemberToGroup(chat, newId); closeModal();
         };
-      });
-    }
+      }
 
-    // ---------- AÑADIR MIEMBROS: ahora solo muestra contactos con los que ya tienes chats y que no estén ya en el chat ----------
-    function showAddMembersModal(chat) {
-      Promise.all([obtenerUsuariosCache(), cargarChats()]).then(() => {
-        const miembrosActuales = getMembers(chat);
-        const contactos = getContactsForUser();
-        const disponibles = contactos.filter(c => !miembrosActuales.includes(c.id));
-        const html = `
-          <h3>Añadir Personas</h3>
-          <div class="small">Selecciona usuarios para añadir al chat (solo contactos):</div>
-          <div class="user-list" id="addUserList"></div>
-          <div style="display:flex;gap:8px;margin-top:12px;justify-content:flex-end">
-            <button id="cancelAdd" class="btn-add">Cancelar</button>
-            <button id="confirmAdd" class="btn-add">Añadir</button>
-          </div>
-        `;
+      async function addMemberToGroup(chat, memberId){
+        if (!chat || !chat.id) return showToast('Chat no válido');
+        try{
+          const res = await safeFetch('/agregar-miembro', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ chatId: chat.id, miembro: memberId, peticionPor: userId }) });
+          if (res && res.ok){ showToast('Miembro añadido');
+            chat.miembros = Array.from(new Set([...(chat.miembros||[]), memberId])); renderMembersPreview(chat); cargarChats();
+          } else { showToast('No se pudo añadir miembro'); }
+        } catch(e){ console.error('agregar-miembro err', e); showToast('Error al intentar añadir miembro'); }
+      }
+
+      function confirmLeaveGroup(chat){ if (!chat) return showToast('Selecciona un chat');
+        const html = `<h3>Salir del grupo</h3><p class="muted">Confirmas que quieres salir del grupo <strong>${chat.displayName||chat.chat||'Grupo'}</strong>?</p><div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px"><button id="cancelLeave" class="btn-ghost">Cancelar</button><button id="confirmLeave" class="btn" style="background:linear-gradient(180deg,#ff6b6b,#b20000)">Salir</button></div>`;
         const card = openModal(html);
-        const list = card.querySelector('#addUserList');
-
-        if (!disponibles || disponibles.length === 0) {
-          list.innerHTML = '<div class="small">No hay contactos disponibles para añadir a este chat.</div>';
-        } else {
-          disponibles.forEach(u => {
-            const item = document.createElement('label');
-            item.className='user-item';
-            item.innerHTML = `<span>${u.nombre}</span><input type="checkbox" data-uid="${u.id}">`;
-            list.appendChild(item);
-          });
-        }
-
-        card.querySelector('#cancelAdd').onclick = () => closeModal();
-        card.querySelector('#confirmAdd').onclick = () => {
-          const toAdd = Array.from(list.querySelectorAll('input[type=checkbox]:checked')).map(cb=>cb.dataset.uid);
-          if (toAdd.length === 0) { alert('Selecciona al menos una persona.'); return; }
-
-          const chatKey = chat.id || chat.chat || miembrosActuales.join(' - ');
-
-          // <<--- NOTE: ruta sin acento aqui: /anadir-miembros
-          fetch('/anadir-miembros', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ usuario: userId, chatKey, nuevosMiembros: toAdd })
-          })
-          .then(async res => {
-            if (!res.ok) {
-              const t = await res.text().catch(()=>'<no body>');
-              throw new Error(`HTTP ${res.status}: ${t}`);
-            }
-            return res.json();
-          })
-          .then(d => {
-            if (d.ok) {
-              closeModal();
-              cargarChats();
-              setTimeout(()=> {
-                const seleccionado = datosChats.find(c => (chat.id && c.id===chat.id) || c.chat===chat.chat);
-                if (seleccionado) seleccionarChat(seleccionado);
-              }, 450);
-            } else {
-              alert('Error al añadir: ' + (d.error || 'error'));
-            }
-          })
-          .catch(err => { console.error(err); alert('Error de red.'); });
+        card.querySelector('#cancelLeave').onclick = closeModal;
+        card.querySelector('#confirmLeave').onclick = async ()=>{ 
+          closeModal(); await leaveGroup(chat);
         };
-      });
-    }
+      }
 
-    function showRenameModal(chat) {
-      const html = `
-        <h3>Renombrar Grupo</h3>
-        <label class="small">Nuevo nombre:</label>
-        <input id="renameInput" style="width:100%;padding:8px;margin-top:6px;border-radius:6px;border:1px solid #4a0000;background:#110000;color:#ffdede" placeholder="Nombre del grupo...">
-        <div style="display:flex;gap:8px;margin-top:12px;justify-content:flex-end">
-          <button id="cancelRename" class="btn-add">Cancelar</button>
-          <button id="confirmRename" class="btn-add">Guardar</button>
-        </div>
-      `;
-      const card = openModal(html);
-      card.querySelector('#renameInput').value = chat.displayName || chat.chat || '';
-      card.querySelector('#cancelRename').onclick = () => closeModal();
-      card.querySelector('#confirmRename').onclick = () => {
-        const nuevo = card.querySelector('#renameInput').value.trim();
-        if (!nuevo) { alert('El nombre no puede estar vacío'); return; }
+      async function leaveGroup(chat){ if (!chat || !chat.id) return showToast('Chat no válido');
+        try{
+          const res = await safeFetch('/salir-grupo', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ chatId: chat.id, usuario: userId }) });
+          if (res && res.ok){ showToast('Has salido del grupo');
+            chat.miembros = (chat.miembros||[]).filter(m=> m!==userId);
+            datosChats = datosChats.map(c => c.id===chat.id ? chat : c).filter(c=> !(Array.isArray(c.miembros) && c.miembros.length===0));
+            chatActual = null; inputArea.style.display='none'; renderChatList(); mensajesCont.innerHTML = '<div class="muted">Selecciona un chat.</div>';
+          } else { showToast('No se pudo salir del grupo'); }
+        } catch(e){ console.error('salir-grupo err', e); showToast('Error al salir del grupo'); }
+      }
 
-        const chatKey = chat.id || chat.chat || getMembers(chat).join(' - ');
-        fetch('/renombrar-grupo', {
-          method:'POST',
-          headers: {'Content-Type':'application/json'},
-          body: JSON.stringify({ usuario: userId, chatKey, nuevoNombre: nuevo })
-        })
-        .then(async res => {
-          if (!res.ok) {
-            const t = await res.text().catch(()=>'<no body>');
-            throw new Error(`HTTP ${res.status}: ${t}`);
-          }
-          return res.json();
-        })
-        .then(d=>{
-          if (d.ok) {
-            closeModal();
-            chat.displayName = nuevo;
-            chatTitleText.innerText = nuevo;
-            mostrarChats();
-          } else {
-            alert('Error renombrando: ' + (d.error || 'error'));
-          }
-        })
-        .catch(err => { console.error(err); alert('Error de red.'); });
-      };
-    }
+      // Cargar inicial
+      cargarChats();
+      obtenerUsuariosCache();
 
-    window.enviarMensaje = function() {
-      const input = document.getElementById("inputMensaje");
-      const texto = input.value.trim();
-      if (!texto || !chatActual) return;
-
-      const nuevoMensaje = { de: userId, mensaje: texto, timestamp: Date.now() };
-      const chatKey = chatActual.id || chatActual.chat || getMembers(chatActual).join(' - ');
-      const localKey = buildMessageKey(nuevoMensaje, (chatActual.mensajes ? chatActual.mensajes.length : 0));
-      const s = seenMessagesByChat.get(chatKey) || new Set();
-      s.add(localKey); seenMessagesByChat.set(chatKey, s);
-
-      const elem = crearMensajeElemento(nuevoMensaje, chatActual, localKey);
-      mensajesContenedor.appendChild(elem);
-      mensajesContenedor.scrollTop = mensajesContenedor.scrollHeight;
-      input.value = "";
-
-      fetch('/guardar-mensaje', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ chatId: chatActual.id, de: userId, mensaje: texto })
-      })
-      .then(async res => {
-        if (!res.ok) {
-          const t = await res.text().catch(()=>'<no body>');
-          throw new Error(`HTTP ${res.status}: ${t}`);
-        }
-        return res.json();
-      })
-      .then(data => {
-        if (!data.ok) {
-          alert("Error al guardar el mensaje: " + (data.error || 'error'));
-          const s2 = seenMessagesByChat.get(chatKey) || new Set();
-          s2.delete(localKey);
-          seenMessagesByChat.set(chatKey, s2);
-          setTimeout(() => actualizarMensajes(true), 300);
-        } else {
-          setTimeout(() => actualizarMensajes(true), 300);
-        }
-      })
-      .catch(err => {
-        console.error("Error al guardar mensaje:", err);
-        const s2 = seenMessagesByChat.get(chatKey) || new Set();
-        s2.delete(localKey);
-        seenMessagesByChat.set(chatKey, s2);
-      });
-    };
-
-    // inicio: cargar usuarios y chats
-    obtenerUsuariosCache().then(()=>{ /* cache listo */ });
-    cargarChats();
-
-    window._cargarChats = cargarChats;
-    window._seen = seenMessagesByChat;
-  });
+      // Exponer para debugging
+      window._ui = { datosChats, setDatos: (d)=>{ datosChats=d; renderChatList(); } };
+    });
   </script>
-
 </body>
 </html>

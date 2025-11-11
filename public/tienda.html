@@ -1,712 +1,451 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8" />
-  <title>Tienda Infernal</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Tienda Infernal – Modernizada</title>
+  <link href="https://fonts.googleapis.com/css2?family=New+Rocker&display=swap" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=UnifrakturCook:wght@700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
+  <meta name="color-scheme" content="dark">
   <script src="verificarId.js"></script>
   <style>
-body {
-  margin: 0;
-  font-family: 'UnifrakturCook', cursive;
-  background: radial-gradient(circle at center, #000000 0%, #1a0000 60%, #0a0000 100%);
-  color: #ff4444;
-  padding: 30px;
-  overflow-x: hidden;
-  position: relative;
-  transition: background 2s ease-in-out;
-}
-
-/* Animación para título */
-h1 {
-  text-align: center;
-  font-size: 3.5em;
-  text-shadow: 0 0 10px crimson, 0 0 25px red, 2px 2px 5px black;
-  margin-bottom: 40px;
-  animation: titlePulse 3s infinite ease-in-out;
-  letter-spacing: 2px;
-  transition: text-shadow 0.3s;
-}
-
-@keyframes titlePulse {
-  0%, 100% {
-    text-shadow: 0 0 10px crimson, 0 0 25px red;
-  }
-  50% {
-    text-shadow: 0 0 30px crimson, 0 0 50px red;
-  }
-}
-
-/* Botones agrupados */
-.botones-header,
-.botones-chat {
-  display: flex;
-  justify-content: center;
-  gap: 30px;
-  margin-bottom: 40px;
-  flex-wrap: wrap;
-  animation: fadeInUp 1.2s ease-out;
-}
-
-.botones-chat {
-  justify-content: flex-start;
-}
-
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(40px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-/* Estilo base botones */
-.botones-header button,
-.botones-chat button {
-  padding: 14px 24px;
-  background: linear-gradient(135deg, #8b0000, #ff0000);
-  border: none;
-  border-radius: 12px;
-  font-family: 'Courier New', monospace;
-  font-weight: bold;
-  color: black;
-  text-transform: uppercase;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  letter-spacing: 1px;
-  box-shadow: 0 0 15px crimson;
-}
-
-.botones-chat button {
-  border-radius: 25px;
-  padding: 20px 28px;
-  font-size: 1.05em;
-}
-
-/* Efecto hover en botones */
-.botones-header button:hover,
-.botones-chat button:hover {
-  background: linear-gradient(135deg, #ff0000, #ff5555);
-  box-shadow: 0 0 25px red, 0 0 50px crimson;
-  transform: scale(1.08);
-}
-
-/* Contenedor de artículos */
-#contenedor-articulos {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 40px;
-  justify-content: center;
-  position: relative;
-  z-index: 2;
-  animation: fadeInUp 2s ease-out;
-}
-
-.zona-articulos {
-  background: rgba(50, 0, 0, 0.4); /* rojo oscuro translúcido */
-  padding: 50px 30px;
-  margin-top: 40px;
-  border-radius: 30px;
-  box-shadow: 0 0 50px rgba(255, 0, 0, 0.3), inset 0 0 20px rgba(255, 50, 50, 0.2);
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
-  border: 1px solid rgba(255, 0, 0, 0.2);
-  width: 90%;
-  max-width: 1400px;
-  margin-left: auto;
-  margin-right: auto;
-}
-/* Tarjeta del artículo */
-.articulo {
-  z-index: 2;
-  background: linear-gradient(145deg, #220000, #0d0000);
-  padding: 24px;
-  width: 360px;
-  border-radius: 18px;
-  box-shadow: 0 0 25px #8b0000, inset 0 0 15px #550000;
-  position: relative;
-  overflow: hidden;
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-  animation: articleAppear 0.8s ease-in-out both;
-}
-
-@keyframes articleAppear {
-  from {
-    opacity: 0;
-    transform: scale(0.9);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
-}
-
-.articulo:hover {
-  transform: translateY(-8px);
-  box-shadow: 0 0 40px crimson, inset 0 0 25px red;
-}
-
-/* Imagen destacada */
-.articulo img {
-  width: 100%;
-  height: 200px;
-  object-fit: cover;
-  border: 3px solid crimson;
-  border-radius: 10px;
-  margin-bottom: 15px;
-  box-shadow: 0 0 10px red;
-  transition: transform 0.3s ease, filter 0.3s ease;
-}
-
-.articulo:hover img {
-  transform: scale(1.03);
-  filter: brightness(1.1);
-}
-
-/* Botón de cerrar (X) */
-.articulo .x-btn {
-  z-index: 999;
-  position: absolute;
-  top: 12px;
-  right: 12px;
-  background: #900;
-  color: white;
-  border: none;
-  font-weight: bold;
-  border-radius: 50%;
-  width: 32px;
-  height: 32px;
-  display: none;
-  cursor: pointer;
-  box-shadow: 0 0 5px black;
-  font-family: monospace;
-  transition: background 0.3s ease, transform 0.2s ease;
-}
-
-.articulo:hover .x-btn {
-  display: block;
-}
-
-.articulo .x-btn:hover {
-  background: #ff0000;
-  transform: scale(1.4);
-}
-
-/* Botón de abrir chat */
-.articulo .chat-btn {
-  margin-top: 15px;
-  background: linear-gradient(135deg, #4d0000, #8b0000);
-  border: none;
-  padding: 12px 14px;
-  color: #ffdddd;
-  font-family: 'Courier New', monospace;
-  font-weight: bold;
-  border-radius: 10px;
-  width: 100%;
-  box-shadow: 0 0 10px crimson;
-  transition: background 0.3s ease, box-shadow 0.3s ease;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.articulo .chat-btn:hover {
-  background: linear-gradient(135deg, #8b0000, #ff0000);
-  color: white;
-  box-shadow: 0 0 20px red, 0 0 30px crimson;
-}
-
-.linea-separadora {
-  border: none;
-  border-top: 2px solid #ff0000;
-  margin: 30px auto;
-  width: 60%;
-  box-shadow: 0 0 15px red;
-  opacity: 0.6;
-}
-
-/* Panel infernal lateral */
-#panel-edicion {
-  position: fixed;
-  top: 100px;
-  right: -200px;
-  width: 180px;
-  background: linear-gradient(145deg, #220000, #0d0000);
-  box-shadow: -5px 0 25px crimson;
-  padding: 20px;
-  border-radius: 10px 0 0 10px;
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-  transition: right 0.5s ease;
-  z-index: 999;
-}
-
-/* Cuando se muestra */
-#panel-edicion.activo {
-  right: 0;
-}
-
-/* Botones del panel */
-.panel-btn {
-  padding: 14px;
-  font-size: 1.2em;
-  font-family: 'Courier New', monospace;
-  background: linear-gradient(145deg, #550000, #330000);
-  color: #ffdddd;
-  border: none;
-  border-radius: 12px;
-  cursor: pointer;
-  box-shadow: 0 0 10px crimson;
-  transition: all 0.3s ease;
-}
-
-.panel-btn:hover {
-  background: linear-gradient(145deg, #8b0000, #ff0000);
-  color: white;
-  box-shadow: 0 0 20px red;
-}
-.menu-edicion {
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 70vw;
-  max-width: 900px;
-  height: auto;
-  background: linear-gradient(135deg, #0d0000, #1c0000);
-  border: 3px solid #ff0033;
-  box-shadow:
-    0 0 60px rgba(255, 0, 64, 0.6),
-    inset 0 0 30px rgba(255, 0, 64, 0.2),
-    0 10px 40px rgba(0, 0, 0, 0.8);
-  padding: 50px 60px;
-  border-radius: 30px;
-  z-index: 9999;
-  display: flex;
-  flex-direction: column;
-  gap: 30px;
-  font-family: 'Courier New', monospace;
-  color: #ffdddd;
-  animation: aparecerMenu 0.5s ease-out;
-  backdrop-filter: blur(12px);
-  background-blend-mode: overlay;
-}
-
-@keyframes aparecerMenu {
-  from {
-    opacity: 0;
-    transform: translate(-50%, -50%) scale(0.9);
-    filter: blur(4px);
-  }
-  to {
-    opacity: 1;
-    transform: translate(-50%, -50%) scale(1);
-    filter: blur(0);
-  }
-}
-
-.menu-edicion h2 {
-  margin: 0;
-  font-size: 2.2em;
-  color: #ff3333;
-  text-shadow: 0 0 20px rgba(255, 0, 0, 0.7);
-  letter-spacing: 2px;
-  text-align: center;
-}
-
-.menu-edicion label {
-  font-weight: bold;
-  color: #ffbbbb;
-  font-size: 1.1em;
-  margin-bottom: 8px;
-  display: block;
-}
-
-.menu-edicion input,
-.menu-edicion textarea {
-  background: #1a0000;
-  color: #fff0f0;
-  border: none;
-  border-bottom: 2px solid crimson;
-  padding: 15px 18px;
-  border-radius: 12px;
-  width: 100%;
-  font-family: inherit;
-  font-size: 1.1em;
-  outline: none;
-  transition: all 0.3s ease;
-  box-shadow: inset 0 0 10px rgba(255, 0, 0, 0.2);
-}
-
-.menu-edicion input:focus,
-.menu-edicion textarea:focus {
-  border-bottom: 2px solid #ff0000;
-  box-shadow: 0 0 15px red, inset 0 0 12px #550000aa;
-  background: #220000;
-}
-
-.menu-edicion button {
-  padding: 16px;
-  font-size: 1.1em;
-  background: linear-gradient(135deg, #4d0000, #8b0000);
-  color: #fff;
-  border: none;
-  border-radius: 14px;
-  cursor: pointer;
-  box-shadow: 0 0 14px rgba(220, 20, 60, 0.6);
-  font-weight: bold;
-  transition: all 0.3s ease;
-  width: 48%;
-  letter-spacing: 1px;
-}
-
-.menu-edicion button:hover {
-  background: linear-gradient(135deg, #ff0000, #aa0000);
-  box-shadow: 0 0 25px red, 0 0 35px crimson;
-  transform: scale(1.05);
-}
-
-.menu-edicion form {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-}
-
-.menu-edicion form div {
-  display: flex;
-  justify-content: space-between;
-  gap: 20px;
-  margin-top: 20px;
-}
-
-.oculto {
-  display: none;
-}
-
-
-
-.articulo .edit-btn {
-  position: absolute;
-  top: 12px;
-  left: 12px;
-  background: #8b0000;
-  color: white;
-  border: none;
-  font-weight: bold;
-  border-radius: 50%;
-  width: 32px;
-  height: 32px;
-  display: none;
-  cursor: pointer;
-  font-family: monospace;
-  box-shadow: 0 0 5px black;
-  transition: background 0.3s ease, transform 0.2s ease;
-  z-index: 999;
-}
-
-.articulo:hover .edit-btn {
-  display: block;
-}
-
-.articulo .edit-btn:hover {
-  background: #ff0000;
-  transform: scale(1.2);
-}
-
-
+    :root{--bg-1:#080000;--panel:#1a0000;--accent:#ff3a3a;--muted:#ffb6b6;--glass:rgba(255,255,255,0.03);--card-radius:14px}
+    *{box-sizing:border-box}html,body{height:100%}body{margin:0;font-family:'New Rocker',cursive;color:var(--accent);background:#000;overflow-x:hidden;min-height:100vh;display:flex;flex-direction:column;align-items:center}
+    #proc-bg{position:fixed;inset:0;width:100%;height:100%;z-index:0}
+    header{z-index:6;position:relative;width:100%;max-width:1200px;padding:34px 22px 8px;display:flex;flex-direction:column;align-items:center}
+    .title{font-family:'UnifrakturCook',serif;font-size:clamp(28px,4vw,48px);color:var(--accent);text-transform:uppercase;letter-spacing:2px;margin:0;text-shadow:0 0 10px rgba(255,0,0,0.08)}
+    .subtitle{font-family:'Share Tech Mono',monospace;color:var(--muted);margin-top:8px;font-size:14px}
+    .actions{display:flex;gap:12px;margin-top:18px;z-index:6}
+    .btn{background:linear-gradient(180deg,var(--accent),#b20000);border:0;color:#111;padding:12px 16px;border-radius:10px;font-weight:700;cursor:pointer;box-shadow:0 8px 30px rgba(255,0,0,0.12);transition:transform .12s ease,box-shadow .18s}
+    .btn.gray{background:linear-gradient(180deg,#220000,#3a0000);color:#ffdede;border:1px solid rgba(255,255,255,0.04)}
+    .btn:hover{transform:translateY(-4px)}
+    .shop-wrap{z-index:6;position:relative;width:100%;max-width:1200px;padding:26px;margin-top:12px}
+    .panel{background:linear-gradient(180deg,rgba(20,0,0,0.95),rgba(40,0,0,0.92));border-radius:18px;padding:22px;border:1px solid rgba(255,0,0,0.06);box-shadow:0 20px 80px rgba(0,0,0,0.7),inset 0 0 30px rgba(255,0,0,0.02);display:flex;flex-direction:column;gap:18px}
+    .controls-row{display:flex;justify-content:space-between;align-items:center;gap:12px}
+    .search{flex:1;display:flex;gap:10px;align-items:center}
+    .search input{flex:1;padding:12px 14px;border-radius:10px;border:1px solid rgba(255,0,0,0.08);background:linear-gradient(145deg,#080000,#120000);color:#ffdede;font-family:'Share Tech Mono',monospace}
+    #contenedor-articulos{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:20px;margin-top:6px}
+    .articulo{background:linear-gradient(145deg,#0b0000,#240000);padding:16px;border-radius:12px;border:1px solid rgba(255,0,0,0.06);box-shadow:0 10px 30px rgba(0,0,0,0.6);overflow:hidden;transition:transform .24s ease,box-shadow .24s ease;position:relative}
+    .articulo:hover{transform:translateY(-8px);box-shadow:0 20px 60px rgba(255,0,0,0.14)}
+    .art-img{width:100%;height:160px;object-fit:cover;border-radius:8px;border:2px solid rgba(255,0,0,0.12);box-shadow:0 6px 18px rgba(0,0,0,0.6)}
+    .art-title{font-size:1.2em;margin:10px 0 6px 0;color:#ffdddd}
+    .art-meta{font-family:'Share Tech Mono',monospace;font-size:13px;color:#ffcfcf;margin:6px 0}
+    .art-actions{display:flex;gap:8px;margin-top:10px}
+    .chat-btn{flex:1;padding:10px;border-radius:10px;border:0;background:linear-gradient(145deg,#4d0000,#8b0000);color:#ffdede;cursor:pointer}
+    .chat-btn:hover{transform:translateY(-3px);box-shadow:0 14px 40px rgba(255,0,0,0.12)}
+    .edit-btn,.x-btn{position:absolute;top:12px;width:36px;height:36px;border-radius:50%;display:none;align-items:center;justify-content:center;font-weight:bold;border:0;cursor:pointer}
+    .edit-btn{left:12px;background:#8b0000;color:#fff}
+    .x-btn{right:12px;background:#900;color:#fff}
+    .edit-btn:hover,.x-btn:hover{transform:scale(1.1)}
+    #panel-edicion{position:fixed;top:90px;right:-320px;width:320px;background:linear-gradient(145deg,#120000,#220000);padding:18px;border-radius:12px 0 0 12px;box-shadow:-10px 0 40px rgba(0,0,0,0.6);z-index:999;transition:right .45s ease}
+    #panel-edicion.activo{right:0}
+    .panel-btn{width:100%;padding:12px;border-radius:10px;border:0;background:linear-gradient(145deg,#550000,#330000);color:#ffdede;cursor:pointer}
+    .menu-edicion{position:fixed;inset:0;display:none;place-items:center;z-index:9999;padding:24px;background:rgba(0,0,0,0.85)}
+    .menu-edicion.activo{display:grid}
+    .menu-inner{width:min(500px,96%);background:linear-gradient(135deg,#0d0000,#1c0000);border:2px solid #ff0033;padding:28px;border-radius:18px;box-shadow:0 20px 60px rgba(0,0,0,0.8)}
+    .menu-inner h2{margin:0 0 16px 0;font-family:'UnifrakturCook',serif;color:#ff4444}
+    .menu-inner label{color:#ffcfcf;font-family:'Share Tech Mono',monospace;display:block;margin-top:12px;margin-bottom:4px}
+    .menu-inner input,.menu-inner textarea{padding:12px;background:#150000;border-radius:10px;border:1px solid rgba(255,0,0,0.06);color:#ffdede;width:100%;font-family:'Share Tech Mono',monospace}
+    .menu-actions{display:flex;gap:12px;margin-top:20px;justify-content:flex-end}
+    #mensaje{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);z-index:10000;padding:10px 14px;border-radius:10px;background:linear-gradient(135deg,rgba(20,0,0,0.95),rgba(40,0,0,0.85));border:1px solid #7f0000;color:var(--muted);font-family:'Share Tech Mono';opacity:0;pointer-events:none;transition:all .35s}
+    #mensaje.show{opacity:1;transform:translateX(-50%) translateY(0);pointer-events:auto}
+    @media (max-width:720px){header{padding:18px}.art-img{height:140px}.actions{flex-wrap:wrap;justify-content:center}#panel-edicion{top:70px}}
   </style>
 </head>
 <body>
-  <h1>Tienda del Infierno</h1>
 
-  <audio id="musica" src="musica.mp3" autoplay loop></audio>
+  <canvas id="proc-bg" aria-hidden="true"></canvas>
 
-  <div class="botones-header">
-    <button onclick="location.href='crear.html'">➕</button>
-    <button onclick="activarModoEdicion()">✏️</button>
-    <button onclick="mostrarCuenta()">Cuenta</button>
+  <header>
+    <h1 class="title">Tienda del Infierno</h1>
+    <div class="subtitle">Intercambia objetos, pacta con vendedores y mantén tu alma a salvo (o no).</div>
+    <div class="actions" style="margin-top:16px">
+      <button class="btn" onclick="location.href='crear.html'">➕ Crear</button>
+      <button class="btn gray" onclick="activarModoEdicion()">✏️ Editar</button>
+      <button class="btn gray" onclick="mostrarCuenta()">Cuenta</button>
+    </div>
+  </header>
+
+  <main class="shop-wrap">
+    <div class="panel">
+      <div class="controls-row">
+        <div class="search">
+          <input id="buscar" placeholder="Buscar artículos..." aria-label="Buscar artículos">
+          <button class="btn gray" id="buscarBtn">Buscar</button>
+        </div>
+        <div style="display:flex;gap:8px">
+          <button class="btn gray" onclick="location.href='chats.html'">💬 Chats</button>
+          <button class="btn gray" id="toggle-music">🔊</button>
+        </div>
+      </div>
+
+      <div id="contenedor-articulos">Cargando artículos...</div>
+    </div>
+  </main>
+
+  <aside id="panel-edicion">
+    <button id="btn-cerrar-panel" class="panel-btn">✖ Cerrar</button>
+  </aside>
+
+  <div id="menu-edicion" class="menu-edicion">
+    <div class="menu-inner">
+      <h2>✏️ Editar Artículo</h2>
+      <form id="form-edicion">
+        <label>Nombre:</label>
+        <input type="text" id="edit-nombre" required>
+        <label>Precio:</label>
+        <input type="number" id="edit-precio" required>
+        <label>Descripción:</label>
+        <textarea id="edit-descripcion" rows="3"></textarea>
+        <label>Versión:</label>
+        <input type="text" id="edit-version">
+        <label>Servidor:</label>
+        <input type="text" id="edit-servidor">
+        <div class="menu-actions">
+          <button type="button" id="cancelar-edicion" class="btn gray">Cancelar</button>
+          <button type="submit" class="btn">💾 Guardar</button>
+        </div>
+      </form>
+    </div>
   </div>
-  <hr class="linea-separadora">
 
-  <div class="botones-chat">
-    <button onclick="location.href='chats.html'">💬</button>
-  </div>
-
-<div id="panel-edicion" class="panel-oculto">
-  <button id="btn-editar" class="panel-btn">Puto :3</button>
-  <button id="btn-borrar" class="panel-btn">🧹 Borrar</button>
-</div>
-
-<div class="zona-articulos">
-  <div id="contenedor-articulos"></div>
-</div>
-<div id="menu-edicion" class="menu-edicion oculto">
-  <h2>✏️ Editar Artículo</h2>
-  <form id="form-edicion">
-    <label>Nombre:</label>
-    <input type="text" id="edit-nombre">
-
-    <label>Precio:</label>
-    <input type="text" id="edit-precio">
-
-    <label>Descripción:</label>
-    <input type="text" id="edit-descripcion">
-
-    <label>Versión:</label>
-    <input type="text" id="edit-version">
-
-    <label>Servidor:</label>
-    <input type="text" id="edit-servidor">
-
-    <button type="submit">💾 Guardar</button>
-    <button type="button" id="cancelar-edicion">Cancelar</button>
-  </form>
-</div>
+  <div id="mensaje"></div>
 
   <script>
-    let userId = null;
-    let modoEdicion = false;
+    const API_BASE = 'http://localhost:3000';
 
-    verificarID(() => {
-      userId = sessionStorage.getItem('userId');
-      cargarArticulos();
+    async function safeFetch(url, options){
+      try{
+        const fullUrl = url.startsWith('/') ? (API_BASE + url) : url;
+        const res = await fetch(fullUrl, options);
+        if (res.status === 404) throw { code: 404, message: `Endpoint not found: ${url}` };
+        const ct = res.headers.get('content-type') || '';
+        if (!res.ok) {
+          if (ct.includes('application/json')) {
+            const j = await res.json(); throw j;
+          } else {
+            throw { message: 'Server error', status: res.status };
+          }
+        }
+        if (ct.includes('application/json')) return res.json();
+        return res.text();
+      } catch(err){
+        throw err;
+      }
+    }
+
+    let userId = null; 
+    let modoEdicion = false;
+    let articuloSeleccionado = null;
+
+    verificarID(()=>{ 
+      userId = sessionStorage.getItem('userId'); 
+      if(!userId){ 
+        showToast('No hay sesión activa. Redirigiendo...'); 
+        setTimeout(()=> location.href='index.html',900); 
+      } else { 
+        cargarArticulos(); 
+      } 
     });
 
-    function mostrarCuenta() {
-      alert(`ID de sesión: ${userId}`);
+    function showToast(text, ms=3200){ 
+      const el = document.getElementById('mensaje'); 
+      el.textContent = text; 
+      el.classList.add('show'); 
+      setTimeout(()=> el.classList.remove('show'), ms); 
     }
 
-
-function activarModoEdicion() {
-  modoEdicion = !modoEdicion;
-  const panel = document.getElementById('panel-edicion');
-
-  if (modoEdicion) {
-    panel.classList.add('activo');
-  } else {
-    panel.classList.remove('activo');
-    ocultarBotonesEliminar();
-  }
-
-  document.querySelectorAll('.edit-btn').forEach(btn => {
-    btn.style.display = modoEdicion ? 'block' : 'none';
-  });
-}
-
-function ocultarBotonesEliminar() {
-  document.querySelectorAll('.x-btn').forEach(btn => btn.style.display = 'none');
-}
-
-document.getElementById('btn-borrar').onclick = () => {
-  document.querySelectorAll('.x-btn').forEach(btn => btn.style.display = 'block');
-};
-
-document.getElementById('btn-editar').onclick = () => {
-  alert("⚙️ Aquí aparecerá un menú para editar el artículo seleccionado (aún por programar).");
-};
-
-
-    function cargarArticulos() {
-      fetch('/articulos')
-        .then(res => res.json())
-        .then(articulos => {
-          const contenedor = document.getElementById('contenedor-articulos');
-          contenedor.innerHTML = "";
-
-          articulos.forEach(a => {
-            const div = document.createElement('div');
-            div.className = 'articulo';
-
-            const img = document.createElement('img');
-            img.src = `uploads/${a.imagen}`;
-            img.alt = a.nombre;
-
-            const nombre = document.createElement('h3');
-            nombre.textContent = a.nombre;
-
-            const precio = document.createElement('p');
-            precio.textContent = `💰 Precio: ${a.precio}`;
-
-            const descripcion = document.createElement('p');
-            descripcion.textContent = `📜 ${a.descripcion}`;
-
-            const version = document.createElement('p');
-            version.textContent = `🧪 Versión: ${a.version}`;
-
-            const servidor = document.createElement('p');
-            servidor.textContent = `🌐 Servidor: ${a.servidor}`;
-
-            const vendedor = document.createElement('p');
-            vendedor.textContent = `😈 Vendedor: ${a.vendedor}`;
-
-            const btnChat = document.createElement('button');
-            btnChat.textContent = "💬 Hablar con el vendedor";
-            btnChat.className = 'chat-btn';
-btnChat.onclick = () => {
-  if (a.vendedor === userId) {
-    alert("No puedes hablar contigo mismo.");
-    return;
-  }
-
-  fetch('/crear-o-seleccionar-chat', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      comprador: userId,
-      vendedor: a.vendedor
-    })
-  })
-  .then(res => res.json())
-  .then(data => {
-    if (data.ok) {
-      location.href = 'chats.html';
-    } else {
-      alert("⚠️ Error: " + data.error);
-    }
-  })
-  .catch(err => {
-    console.error("🔥 Error al crear chat:", err);
-    alert("Error infernal al intentar iniciar conversación.");
-  });
-};
-
-
-            const btnX = document.createElement('button');
-            btnX.textContent = 'X';
-            btnX.className = 'x-btn';
-            btnX.onclick = () => eliminarArticulo(a.imagen, div);
-
-            const btnEdit = document.createElement('button');
-btnEdit.textContent = '✏️';
-btnEdit.className = 'edit-btn';
-btnEdit.onclick = () => abrirMenuEdicion(div); // Usa la misma función que ya tienes
-
-div.appendChild(btnEdit);
-
-            if (a.vendedor === userId) {
-              btnX.style.display = modoEdicion ? 'block' : 'none';
-              div.appendChild(btnX);
-            }
-
-            div.appendChild(img);
-            div.appendChild(nombre);
-            div.appendChild(precio);
-            div.appendChild(descripcion);
-            div.appendChild(version);
-            div.appendChild(servidor);
-            div.appendChild(vendedor);
-            div.appendChild(btnChat);
-
-            contenedor.appendChild(div);
-          });
-        })
-        .catch(err => {
-          console.error("🔥 Error al cargar artículos:", err);
-        });
+    function mostrarCuenta(){ 
+      alert(`ID de sesión: ${userId || 'anónimo'}`); 
     }
 
-    function eliminarArticulo(nombreImagen, divElemento) {
-      fetch('/eliminar-articulo', {
-        method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ imagen: nombreImagen })
-      })
-      .then(res => res.json())
-      .then(data => {
-        if (data.eliminado) {
-          divElemento.remove();
-        } else {
-          alert("⚠️ No se pudo eliminar.");
+    function activarModoEdicion(){ 
+      modoEdicion = !modoEdicion; 
+      const panel = document.getElementById('panel-edicion'); 
+      
+      if(modoEdicion) {
+        panel.classList.add('activo');
+        showToast('Modo edición: solo tus artículos');
+      } else {
+        panel.classList.remove('activo');
+      }
+      
+      // Mostrar botones solo en artículos propios
+      document.querySelectorAll('.articulo').forEach(artDiv => {
+        const esPropio = artDiv.dataset.vendedor === userId;
+        const btnEdit = artDiv.querySelector('.edit-btn');
+        const btnX = artDiv.querySelector('.x-btn');
+        
+        if (btnEdit && btnX) {
+          if (modoEdicion && esPropio) {
+            btnEdit.style.display = 'flex';
+            btnX.style.display = 'flex';
+          } else {
+            btnEdit.style.display = 'none';
+            btnX.style.display = 'none';
+          }
         }
-      })
-      .catch(() => {
-        alert("💀 Error infernal al eliminar.");
       });
     }
 
-    let articuloSeleccionado = null;
+    document.getElementById('btn-cerrar-panel').addEventListener('click', ()=>{ 
+      modoEdicion = false;
+      document.getElementById('panel-edicion').classList.remove('activo'); 
+      document.querySelectorAll('.x-btn, .edit-btn').forEach(b=> b.style.display = 'none'); 
+    });
 
-document.getElementById('btn-editar').onclick = () => {
-  const misArticulos = document.querySelectorAll('.articulo');
-  misArticulos.forEach(card => {
-  });
-};
+    // Cargar artículos
+    async function cargarArticulos(){
+      try{
+        const articulos = await safeFetch('/articulos', { method: 'GET' });
+        const cont = document.getElementById('contenedor-articulos'); 
+        cont.innerHTML = '';
+        
+        if (!articulos || articulos.length === 0) {
+          cont.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;color:#ff9999">No hay artículos</div>';
+          return;
+        }
 
-function abrirMenuEdicion(card) {
-  articuloSeleccionado = card;
-
-  document.getElementById('edit-nombre').value = card.querySelector('h3')?.textContent || "";
-  document.getElementById('edit-precio').value = extraerTexto(card, "💰 Precio:");
-  document.getElementById('edit-descripcion').value = extraerTexto(card, "📜");
-  document.getElementById('edit-version').value = extraerTexto(card, "🧪 Versión:");
-  document.getElementById('edit-servidor').value = extraerTexto(card, "🌐 Servidor:");
-
-  document.getElementById('menu-edicion').classList.remove('oculto');
-}
-
-function extraerTexto(card, etiqueta) {
-  const p = Array.from(card.querySelectorAll('p')).find(p => p.textContent.startsWith(etiqueta));
-  return p ? p.textContent.replace(etiqueta, '').trim() : "";
-}
-
-document.getElementById('form-edicion').onsubmit = function (e) {
-  e.preventDefault();
-
-  const nuevoNombre = document.getElementById('edit-nombre').value;
-  const nuevoPrecio = document.getElementById('edit-precio').value;
-  const nuevaDescripcion = document.getElementById('edit-descripcion').value;
-  const nuevaVersion = document.getElementById('edit-version').value;
-  const nuevoServidor = document.getElementById('edit-servidor').value;
-
-  articuloSeleccionado.querySelector('h3').textContent = nuevoNombre;
-  actualizarTexto(articuloSeleccionado, "💰 Precio:", nuevoPrecio);
-  actualizarTexto(articuloSeleccionado, "📜", nuevaDescripcion);
-  actualizarTexto(articuloSeleccionado, "🧪 Versión:", nuevaVersion);
-  actualizarTexto(articuloSeleccionado, "🌐 Servidor:", nuevoServidor);
-
-  document.getElementById('menu-edicion').classList.add('oculto');
-
-  // 🔥 NUEVO: Enviar los cambios al backend
-  const imagen = articuloSeleccionado.querySelector('img').src.split('/').pop();
-
-  fetch('/editar-articulo', {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      imagen: imagen,
-      nombre: nuevoNombre,
-      precio: nuevoPrecio,
-      descripcion: nuevaDescripcion,
-      version: nuevaVersion,
-      servidor: nuevoServidor
-    })
-  })
-  .then(res => res.json())
-  .then(data => {
-    if (data.ok) {
-      alert('✅ Artículo actualizado en la base de datos.');
-    } else {
-      alert('⚠️ Error: ' + data.error);
+        articulos.forEach(a=>{
+          const div = document.createElement('div'); 
+          div.className = 'articulo'; 
+          div.dataset.vendedor = a.vendedor || '';
+          div.dataset.imagen = a.imagen || '';
+          
+          const img = document.createElement('img'); 
+          img.className='art-img'; 
+          img.src = `uploads/${a.imagen}`; 
+          img.alt = a.nombre || 'Artículo';
+          
+          const title = document.createElement('div'); 
+          title.className='art-title'; 
+          title.textContent = a.nombre || 'Sin nombre';
+          
+          const metaWrap = document.createElement('div'); 
+          metaWrap.className='art-meta'; 
+          metaWrap.innerHTML = `<div>💰 ${a.precio || 'N/A'} — 🧪 ${a.version || 'N/A'}</div><div>🌐 ${a.servidor || 'N/A'} • 😈 ${a.vendedor || 'Anónimo'}</div>`;
+          
+          const actions = document.createElement('div'); 
+          actions.className='art-actions';
+          
+          const btnChat = document.createElement('button'); 
+          btnChat.className='chat-btn'; 
+          btnChat.textContent='💬 Hablar con vendedor';
+          btnChat.onclick = async () => {
+            btnChat.disabled = true; 
+            btnChat.textContent = '...';
+            try{ 
+              await iniciarChat(a); 
+            } finally { 
+              btnChat.disabled = false; 
+              btnChat.textContent = '💬 Hablar con vendedor'; 
+            }
+          };
+          
+          const btnEdit = document.createElement('button'); 
+          btnEdit.className='edit-btn'; 
+          btnEdit.textContent='✏️'; 
+          btnEdit.style.display = 'none';
+          btnEdit.onclick = ()=> abrirMenuEdicion(div, a);
+          
+          const btnX = document.createElement('button'); 
+          btnX.className='x-btn'; 
+          btnX.textContent='✖'; 
+          btnX.style.display = 'none';
+          btnX.onclick = ()=> eliminarArticulo(a.imagen, div);
+          
+          div.appendChild(btnEdit); 
+          div.appendChild(btnX); 
+          div.appendChild(img); 
+          div.appendChild(title); 
+          div.appendChild(metaWrap); 
+          actions.appendChild(btnChat); 
+          div.appendChild(actions); 
+          cont.appendChild(div);
+        });
+      } catch(err){
+        console.error('Error:', err); 
+        document.getElementById('contenedor-articulos').innerHTML = '<div style="color:#ff6666">Error cargando artículos</div>';
+      }
     }
-  })
-  .catch(err => {
-    console.error('🔥 Error al enviar cambios:', err);
-    alert('Error infernal al intentar actualizar el artículo.');
-  });
-};
 
-document.getElementById('cancelar-edicion').onclick = () => {
-  document.getElementById('menu-edicion').classList.add('oculto');
-};
+    async function iniciarChat(a){
+      if (!a || !a.vendedor) { showToast('Vendedor inválido'); return; }
+      if (a.vendedor === userId){ alert('No puedes hablar contigo mismo'); return; }
+      
+      try {
+        const resChats = await safeFetch('/obtener-chats', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userId })
+        });
+        
+        if (resChats && resChats.ok && Array.isArray(resChats.chats)) {
+          const found = resChats.chats.find(ch => 
+            Array.isArray(ch.miembros) && 
+            ch.miembros.includes(userId) && 
+            ch.miembros.includes(a.vendedor)
+          );
+          if (found) { 
+            sessionStorage.setItem('chatId', found.id); 
+            return location.href = 'chats.html'; 
+          }
+        }
 
-function actualizarTexto(card, etiqueta, nuevoTexto) {
-  const p = Array.from(card.querySelectorAll('p')).find(p => p.textContent.startsWith(etiqueta));
-  if (p) p.textContent = `${etiqueta} ${nuevoTexto}`;
-}
+        const created = await safeFetch('/crear-grupo', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ 
+            creador: userId, 
+            miembros: [a.vendedor], 
+            displayName: `${userId} & ${a.vendedor}` 
+          })
+        });
 
+        if (created && created.ok && created.chat) {
+          const cid = created.chat.id || created.chat.chat;
+          sessionStorage.setItem('chatId', cid);
+          showToast('Chat creado');
+          setTimeout(()=> location.href = 'chats.html', 350);
+        }
+      } catch(err){
+        console.error('Error chat:', err); 
+        showToast('Error al crear chat');
+      }
+    }
+
+    async function eliminarArticulo(imagen, elem){
+      if(!confirm('¿Eliminar artículo?')) return;
+      try{
+        const data = await safeFetch('/eliminar-articulo', {
+          method: 'DELETE', 
+          headers: {'Content-Type':'application/json'}, 
+          body: JSON.stringify({ imagen })
+        });
+        if (data && (data.eliminado || data.ok)) { 
+          elem.remove(); 
+          showToast('Artículo eliminado'); 
+        } else { 
+          alert('No se pudo eliminar'); 
+        }
+      } catch(err){
+        console.error('Error:', err); 
+        showToast('Error al eliminar');
+      }
+    }
+
+    function abrirMenuEdicion(card, articulo){ 
+      articuloSeleccionado = {card, articulo}; 
+      document.getElementById('edit-nombre').value = articulo.nombre || ''; 
+      document.getElementById('edit-precio').value = articulo.precio || ''; 
+      document.getElementById('edit-descripcion').value = articulo.descripcion || ''; 
+      document.getElementById('edit-version').value = articulo.version || ''; 
+      document.getElementById('edit-servidor').value = articulo.servidor || ''; 
+      document.getElementById('menu-edicion').classList.add('activo'); 
+    }
+
+    document.getElementById('form-edicion').addEventListener('submit', async function(e){ 
+      e.preventDefault(); 
+      if(!articuloSeleccionado) return; 
+      
+      const nuevo = { 
+        nombre: document.getElementById('edit-nombre').value,
+        precio: document.getElementById('edit-precio').value,
+        descripcion: document.getElementById('edit-descripcion').value,
+        version: document.getElementById('edit-version').value,
+        servidor: document.getElementById('edit-servidor').value,
+        imagen: articuloSeleccionado.articulo.imagen
+      };
+      
+      try{
+        const data = await safeFetch('/editar-articulo', { 
+          method:'PUT', 
+          headers:{'Content-Type':'application/json'}, 
+          body: JSON.stringify(nuevo) 
+        });
+        
+        if (data && data.ok) {
+          showToast('Actualizado'); 
+          cargarArticulos();
+        } else {
+          showToast('Error al actualizar');
+        }
+      } catch(err){ 
+        console.error('Error:',err); 
+        showToast('Error');
+      } finally { 
+        document.getElementById('menu-edicion').classList.remove('activo'); 
+        articuloSeleccionado=null; 
+      }
+    });
+
+    document.getElementById('cancelar-edicion').addEventListener('click', ()=>{ 
+      document.getElementById('menu-edicion').classList.remove('activo'); 
+      articuloSeleccionado=null; 
+    });
+
+    document.getElementById('buscarBtn').addEventListener('click', ()=>{ 
+      const q = document.getElementById('buscar').value.trim().toLowerCase(); 
+      document.querySelectorAll('.articulo').forEach(card=>{ 
+        const t = card.querySelector('.art-title').textContent.toLowerCase(); 
+        card.style.display = t.includes(q) ? '' : 'none'; 
+      }); 
+    });
+
+    document.getElementById('toggle-music').addEventListener('click', ()=>{ 
+      const a = document.getElementById('musica'); 
+      if(!a) return;
+      if(a.paused) { 
+        a.play(); showToast('Música ON'); 
+      } else { 
+        a.pause(); showToast('Música OFF'); 
+      } 
+    });
+
+    /* Background */
+    (function(){
+      const canvas = document.getElementById('proc-bg');
+      const ctx = canvas.getContext('2d');
+      let w,h,dpr=Math.min(window.devicePixelRatio||1,2), t0=performance.now();
+      function resize(){ 
+        w=innerWidth; h=innerHeight; 
+        canvas.width=Math.round(w*dpr); 
+        canvas.height=Math.round(h*dpr); 
+        canvas.style.width=w+'px'; 
+        canvas.style.height=h+'px'; 
+        ctx.setTransform(dpr,0,0,dpr,0,0); 
+      }
+      window.addEventListener('resize', resize); 
+      resize();
+      function loop(now){ 
+        const t=(now-t0)*0.001; 
+        ctx.clearRect(0,0,w,h);
+        const grd = ctx.createLinearGradient(0,0,w,h); 
+        grd.addColorStop(0, '#120000'); 
+        grd.addColorStop(1, '#050000'); 
+        ctx.fillStyle = grd; 
+        ctx.fillRect(0,0,w,h);
+        for(let i=0;i<12;i++){ 
+          const x = (Math.sin(t*0.3 + i)*0.5+0.5)*w; 
+          const y = (Math.cos(t*0.27 + i*1.3)*0.5+0.5)*h; 
+          const r = 80 + (i*6)%100; 
+          const g = ctx.createRadialGradient(x,y,r*0.1,x,y,r); 
+          g.addColorStop(0, 'rgba(255,58,58,0.08)'); 
+          g.addColorStop(1, 'rgba(0,0,0,0)'); 
+          ctx.fillStyle = g; 
+          ctx.beginPath(); 
+          ctx.arc(x,y,r,0,Math.PI*2); 
+          ctx.fill(); 
+        }
+        ctx.fillStyle='rgba(0,0,0,0.25)'; 
+        ctx.fillRect(0,0,w,h);
+        requestAnimationFrame(loop);
+      }
+      requestAnimationFrame(loop);
+    })();
   </script>
+
+  <audio id="musica" src="musica.mp3" autoplay loop></audio>
 </body>
 </html>

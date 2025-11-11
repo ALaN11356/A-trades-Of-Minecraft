@@ -1,280 +1,242 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8" />
-  <title>Acceso Infernal — Mantenimiento</title>
+  <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Acceso Infernal — Mantenimiento</title>
+  <link href="https://fonts.googleapis.com/css2?family=New+Rocker&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=UnifrakturCook:wght@700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
+
+  <meta name="color-scheme" content="dark">
+
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=New+Rocker&display=swap');
-    @import url('https://fonts.googleapis.com/css2?family=UnifrakturCook:wght@700&display=swap');
-    @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
+    :root{--bg-1:#0b0000;--accent:#ff3a3a;--muted:#ffb6b6;--panel:rgba(20,0,0,0.92);--radius:12px}
+    *{box-sizing:border-box}html,body{height:100%}body{margin:0;min-height:100vh;font-family:'New Rocker',cursive;color:var(--accent);display:flex;align-items:center;justify-content:center;padding:28px;overflow:hidden;filter:contrast(1.05) saturate(1.05);-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;position:relative;background:#000}
 
-    /* Reset y fondo infernal */
-    *{box-sizing:border-box}
-    html,body{height:100%;}
-    body {
-      margin: 0;
-      padding: 0;
-      background: radial-gradient(circle at top, #0b0000 0%, #000000 80%) no-repeat,
-                  repeating-linear-gradient(135deg, #1a0000, #0a0000 10px, #1a0000 20px);
-      color: #ff2222;
-      font-family: 'New Rocker', cursive;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      height: 100vh;
-      overflow: hidden;
-      position: relative;
-      background-blend-mode: multiply;
-      filter: contrast(1.05) saturate(1.05);
-    }
+    /* Procedural canvas sits behind the UI */
+    #proc-bg{position:fixed;inset:0;width:100%;height:100%;z-index:0;display:block}
 
-    /* Capa oscura para enfocar el modal de mantenimiento */
-    .overlay {
-      position: absolute;
-      inset: 0;
-      background: linear-gradient(180deg, rgba(0,0,0,0.6), rgba(20,0,0,0.85));
-      z-index: 5;
-      backdrop-filter: blur(2px) saturate(0.9);
-      pointer-events: none;
-    }
+    .container{z-index:5;width:min(1100px,98%);display:grid;grid-template-columns:1fr 420px;gap:22px;align-items:center;background:linear-gradient(180deg,rgba(20,0,0,0.95),rgba(40,0,0,0.92));border:1px solid rgba(255,0,0,0.12);padding:26px;border-radius:16px;box-shadow:0 20px 80px rgba(0,0,0,0.7),inset 0 0 30px rgba(255,0,0,0.02);opacity:0;transform:translateY(10px);transition:opacity .6s ease,transform .6s ease}
+    .container.show{opacity:1;transform:translateY(0)}
 
-    /* Modal central de mantenimiento */
-    .maintenance-modal {
-      z-index: 10;
-      width: min(880px, 92%);
-      background: linear-gradient(180deg, rgba(20,0,0,0.95), rgba(40,0,0,0.92));
-      border: 2px solid #7f0000;
-      border-radius: 14px;
-      padding: 28px;
-      box-shadow: 0 10px 60px rgba(0,0,0,0.6), 0 0 30px rgba(150,0,0,0.12) inset;
-      display: grid;
-      grid-template-columns: 1fr 360px;
-      gap: 22px;
-      align-items: center;
-    }
+    .left{padding-right:6px;transform:translateX(-18px);opacity:0;transition:transform .6s ease,opacity .6s ease}
+    .container.show .left{transform:none;opacity:1}
 
-    /* Titulo grande */
-    .maintenance-title {
-      font-size: clamp(22px, 4vw, 38px);
-      color: #ff3333;
-      text-transform: uppercase;
-      letter-spacing: 2px;
-      text-align: left;
-      margin: 0 0 6px 0;
-      font-family: 'UnifrakturCook', serif;
-      text-shadow: 0 0 6px #990000, 0 0 24px rgba(255,0,0,0.06);
-    }
+    .title{font-family:'UnifrakturCook',serif;font-size:clamp(28px,4vw,44px);margin:0 0 6px 0;color:var(--accent);text-transform:uppercase;letter-spacing:2px;text-shadow:0 0 8px rgba(255,0,0,0.08);opacity:0;transform:translateY(-8px);transition:opacity .6s ease .12s,transform .6s ease .12s}
+    .container.show .title{opacity:1;transform:none}
+    .subtitle{font-family:'Share Tech Mono',monospace;color:var(--muted);margin:0 0 14px 0;font-size:14px;opacity:0;transform:translateY(-6px);transition:opacity .6s ease .18s,transform .6s ease .18s}
+    .container.show .subtitle{opacity:1;transform:none}
 
-    .maintenance-sub {
-      color: #ffb6b6;
-      font-family: 'Share Tech Mono', monospace;
-      margin: 0 0 14px 0;
-      font-size: 14px;
-    }
+    .status-box{margin-top:6px;background:linear-gradient(135deg,rgba(10,0,0,0.4),rgba(30,0,0,0.2));border-radius:10px;padding:14px;border:1px solid rgba(255,0,0,0.06);color:#ffdede;font-size:14px;line-height:1.4;box-shadow:0 6px 18px rgba(0,0,0,0.5) inset;display:flex;flex-direction:column;gap:8px;align-items:flex-start;transform:translateX(-6px);opacity:0;transition:transform .6s ease .22s,opacity .6s ease .22s}
+    .container.show .status-box{transform:none;opacity:1}
 
-    /* Contenido izquierdo: explicación y acciones deshabilitadas */
-    .left {
-      padding-right: 6px;
-    }
+    form{margin-top:14px;display:grid;gap:12px}label{display:block;font-family:'Share Tech Mono';font-size:13px;color:var(--muted);margin-bottom:6px}
+    .field{display:flex;gap:8px;align-items:center}
+    input[type="text"],input[type="password"],.fake-input{flex:1;padding:12px 14px;border-radius:10px;border:1px solid rgba(255,0,0,0.12);background:linear-gradient(145deg,#080000,#120000);color:#ffdede;font-size:15px;outline:none;box-shadow:0 6px 18px rgba(0,0,0,0.5),inset 0 0 30px rgba(255,0,0,0.02);transition:box-shadow .18s,transform .12s,opacity .2s;font-family:inherit}
+    input::placeholder{color:#5a0000}input:focus{box-shadow:0 10px 30px rgba(0,0,0,0.6),0 0 16px rgba(255,0,0,0.08);border-color:var(--accent)}
 
-    .status-box {
-      margin-top: 10px;
-      background: linear-gradient(135deg, rgba(10,0,0,0.4), rgba(30,0,0,0.2));
-      border: 1px solid rgba(255,0,0,0.08);
-      padding: 14px;
-      border-radius: 10px;
-      color: #ffcfcf;
-      font-size: 14px;
-      line-height: 1.4;
-    }
+    .controls{display:flex;gap:10px}
+    .btn-primary{background:linear-gradient(180deg,var(--accent),#b20000);border:0;padding:12px 14px;border-radius:10px;color:white;font-weight:700;cursor:pointer;font-size:16px;box-shadow:0 8px 30px rgba(255,0,0,0.12);transition:transform .12s ease,box-shadow .12s ease,opacity .12s;display:inline-grid;place-items:center;min-width:140px}
+    .btn-primary:active{transform:translateY(1px)}.btn-primary.pulse{animation:softPulse 2.6s infinite}@keyframes softPulse{0%{box-shadow:0 8px 20px rgba(255,0,0,0.08)}50%{box-shadow:0 10px 40px rgba(255,0,0,0.14)}100%{box-shadow:0 8px 20px rgba(255,0,0,0.08)}}
 
-    /* Contenido derecho: panel visual y controles (desactivados) */
-    .right {
-      padding: 8px 6px;
-      display:flex;
-      flex-direction:column;
-      gap:12px;
-      align-items:center;
-      justify-content:center;
-    }
+    .right{display:flex;flex-direction:column;gap:12px;align-items:stretch;transform:translateX(18px);opacity:0;transition:transform .6s ease .12s,opacity .6s ease .12s}
+    .container.show .right{transform:none;opacity:1}.card{background:linear-gradient(145deg,#0b0000,#240000);border-radius:10px;padding:14px;border:1px solid #330000;box-shadow:0 10px 30px rgba(0,0,0,0.6)}
+    .spinner{width:72px;height:72px;margin:6px auto;display:grid;place-items:center}.spinner svg{animation:spin 4s linear infinite;transform-origin:center}@keyframes spin{to{transform:rotate(360deg)}}
 
-    .device-card{
-      width:100%;
-      background: linear-gradient(145deg,#0b0000,#240000);
-      border-radius:10px;
-      padding:12px;
-      border:1px solid #330000;
-      box-shadow: 0 6px 20px rgba(0,0,0,0.6);
-      text-align:center;
-    }
-
-    .spinner{
-      width:70px;height:70px;margin:6px auto 8px auto;
-      display:grid;place-items:center;
-      filter: drop-shadow(0 6px 12px rgba(0,0,0,0.6));
-    }
-
-    /* simple gear spinner using SVG rotation */
-    .spinner svg{animation: spin 4s linear infinite; transform-origin:center;}
-    @keyframes spin {to {transform: rotate(360deg);}}
-
-    /* Inputs y botones: visualmente deshabilitados */
-    input, button.mi-boton {
-      width:100%;
-      padding: 12px 14px;
-      font-family: 'New Rocker', fantasy;
-      font-size: 1.1em;
-      border: 2px solid #5a0000;
-      background: linear-gradient(145deg, #080000, #120000);
-      color: #7f3a3a;
-      border-radius: 8px;
-      box-shadow: inset 0 0 12px rgba(255,0,0,0.02);
-      transition: all 0.18s ease;
-      cursor: not-allowed;
-      opacity: 0.6;
-    }
-
-    button.mi-boton{
-      display:inline-grid;place-items:center;gap:6px;border-radius:8px;padding:10px 12px;font-weight:bold;
-    }
-
-    /* Boton info sigue disponible (puede mostrar detalles) */
-    #info-btn {position: absolute; bottom: 18px; right: 18px; z-index:20;}
-
-    /* Mensaje infernal (aria-live) */
-    #mensaje {
-      position: absolute;
-      bottom: 18px;
-      left: 50%;
-      transform: translateX(-50%);
-      text-align: center;
-      color: #ffb6b6;
-      font-size: 1em;
-      font-family: 'Share Tech Mono', monospace;
-      background: linear-gradient(135deg, rgba(20, 0, 0, 0.95), rgba(40, 0, 0, 0.85));
-      border: 1px solid #7f0000;
-      padding: 10px 14px;
-      border-radius: 10px;
-      box-shadow: 0 8px 30px rgba(0,0,0,0.6);
-      z-index: 30;
-      opacity: 0;
-      transform-origin: center bottom;
-      transition: opacity 0.4s ease, transform 0.4s ease;
-      pointer-events: none;
-    }
-
-    #mensaje.show{opacity:1; transform: translateX(-50%) translateY(0);} 
-
-    /* Responsive */
-    @media (max-width:880px){
-      .maintenance-modal{grid-template-columns: 1fr;}
-      .right{order: -1}
-    }
-
+    @media(max-width:900px){.container{grid-template-columns:1fr}.right{order:-1}}
+    #info-btn{position:fixed;right:18px;bottom:18px;z-index:40;background:radial-gradient(circle at center,#c00,#600);color:#fff;border:2px solid #ff0033;border-radius:999px;width:58px;height:58px;display:grid;place-items:center;font-weight:700;box-shadow:0 10px 30px rgba(0,0,0,0.6)}
+    #mensaje{position:fixed;left:50%;bottom:20px;transform:translateX(-50%) translateY(10px);z-index:60;padding:12px 18px;border-radius:10px;background:linear-gradient(135deg,rgba(20,0,0,0.95),rgba(40,0,0,0.85));border:1px solid #7f0000;color:var(--muted);font-family:'Share Tech Mono';opacity:0;pointer-events:none;transition:all .35s}#mensaje.show{opacity:1;transform:translateX(-50%) translateY(0);pointer-events:auto}
+    .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}.disabled{opacity:.6;cursor:not-allowed}
   </style>
 </head>
 <body>
 
-  <div class="overlay" aria-hidden="true"></div>
+  <!-- Procedural background canvas -->
+  <canvas id="proc-bg" aria-hidden="true"></canvas>
 
-  <main class="maintenance-modal" role="main" aria-labelledby="maint-title">
-    <section class="left" aria-hidden="false">
-      <h1 id="maint-title" class="maintenance-title">Acceso al Infierno — Mantenimiento</h1>
-      <p class="maintenance-sub">El Portal está temporalmente cerrado por trabajos infernales. No responda a demonios distraídos.</p>
+  <main class="container" role="main" aria-labelledby="maint-title">
 
-      <div class="status-box" aria-live="polite">
-        <strong>Estado:</strong> Actualización de sistemas demoníacos en curso.<br>
-        <small>Estamos aplicando mejoras en la forja de pactos, reordenando almas y depurando bugs espectrales.</small>
+    <section class="left">
+      <h1 id="maint-title" class="title">Acceso al Infierno</h1>
+      <p class="subtitle">El Portal muestra mantenimiento — aun así puedes iniciar sesión normalmente.</p>
+
+      <div class="status-box" id="statusBox" aria-live="polite">
+        <div style="display:flex;align-items:center;gap:8px">
+          <strong>Estado:</strong>
+          <span id="estadoTexto">Comprobando sistemas...</span>
+          <span id="badge" style="margin-left:auto;padding:6px 8px;border-radius:8px;background:rgba(255,255,255,0.03);font-size:12px;color:#ffdede">Mantenimiento</span>
+        </div>
+        <div style="margin-top:6px;font-size:13px;color:#ffdede">Aplicando mejoras en la forja de pactos y la seguridad del sello. Esto es informativo: el acceso sigue funcionando a menos que se active el modo "hard".</div>
       </div>
 
-      <div style="margin-top:12px;">
-        <label style="display:block;margin-bottom:6px;color:#ffb6b6;font-family:'Share Tech Mono', monospace">ID (temporalmente deshabilitado)</label>
-        <input id="inputId" placeholder="—" disabled />
-      </div>
+      <form id="accessForm" novalidate>
+        <div>
+          <label for="inputId">ID</label>
+          <input id="inputId" type="text" name="id" placeholder="—" autocomplete="username" />
+        </div>
 
-      <div style="margin-top:10px;">
-        <label style="display:block;margin-bottom:6px;color:#ffb6b6;font-family:'Share Tech Mono', monospace">Pacto</label>
-        <input id="inputPass" type="password" placeholder="—" disabled />
-      </div>
+        <div>
+          <label for="inputPass">Pacto (contraseña)</label>
+          <input id="inputPass" type="password" name="password" placeholder="—" autocomplete="current-password" />
+        </div>
 
-      <div style="margin-top:12px; display:flex; gap:10px;">
-        <button class="mi-boton" aria-disabled="true" disabled>
-          <svg viewBox="0 0 100 30" width="120" height="34" xmlns="http://www.w3.org/2000/svg">
-            <text x="50%" y="60%" font-size="18" font-weight="bold" fill="#fff" font-family="New Rocker" text-anchor="middle" dominant-baseline="middle">Entrar</text>
-          </svg>
-        </button>
-      </div>
+        <div class="controls">
+          <button type="button" id="submitBtn" class="btn-primary pulse">Entrar</button>
+        </div>
+
+        <div style="margin-top:6px;font-size:13px;color:#ffccc8">Nota: el sitio indica mantenimiento. Para bloquear por completo añade <code>?hard=true</code> a la URL.</div>
+      </form>
 
     </section>
 
     <aside class="right" aria-hidden="false">
-      <div class="device-card">
+      <div class="card" id="forjaCard">
         <div class="spinner" aria-hidden="true">
-          <!-- Gear SVG -->
           <svg width="64" height="64" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
             <path d="M12 15.5A3.5 3.5 0 1 0 12 8.5a3.5 3.5 0 0 0 0 7z" stroke="#ffb6b6" stroke-width="0.9"/>
             <path d="M19.4 13.5c.04-.5.04-1 .04-1.5s0-1-.04-1.5l2.11-1.65a.5.5 0 0 0 .12-.63l-2-3.46a.5.5 0 0 0-.6-.22L16.9 5.2a7.1 7.1 0 0 0-1.3-.75L15 1.8a.5.5 0 0 0-.5-.3h-4a.5.5 0 0 0-.5.3L9.4 4.4c-.43.18-.84.4-1.22.66L4.98 3.1a.5.5 0 0 0-.6.22l-2 3.46a.5.5 0 0 0 .12.63L4.6 10.5c-.04.5-.04 1-.04 1.5s0 1 .04 1.5L2.49 15.15a.5.5 0 0 0-.12.63l2 3.46c.15.26.45.36.7.25l3.2-1.32c.37.26.78.48 1.21.66l.6 2.6a.5.5 0 0 0 .5.3h4a.5.5 0 0 0 .5-.3l.6-2.6c.45-.18.88-.4 1.28-.66l3.2 1.32c.25.1.55 0 .7-.25l2-3.46a.5.5 0 0 0-.12-.63L19.4 13.5z" stroke="#ff6666" stroke-width="0.6" fill="rgba(255,0,0,0.02)"/>
           </svg>
         </div>
-        <div style="color:#ffdddd;font-size:15px">Trabajando en la forja de pactos…</div>
-        <div style="font-size:12px;color:#ffb6b6;margin-top:8px">No intentes usar accesos de emergencia. Todo está cerrado.</div>
+        <div style="color:#ffdddd;font-size:15px;text-align:center">Trabajando en la forja de pactos…</div>
+        <div style="font-size:12px;color:#ffb6b6;margin-top:8px;text-align:center">Puedes iniciar sesión aun cuando el portal esté en mantenimiento. Para bloquear por completo: <code>?hard=true</code>.</div>
       </div>
 
-      <div class="device-card" style="opacity:0.9">
-        <strong style="display:block;margin-bottom:6px;color:#ffb6b6">Información</strong>
+      <div class="card" id="infoCard">
+        <strong style="display:block;margin-bottom:6px;color:var(--muted)">Información</strong>
         <div style="font-size:13px;color:#ffdede">Actualización: mejoras en la gestión de almas y seguridad de pactos. Fecha estimada: pronto. (No nos gusta dar fechas.)</div>
       </div>
-
     </aside>
+
   </main>
 
-  <button id="info-btn" title="Detalles legales" aria-expanded="false">i</button>
+  <button id="info-btn" aria-expanded="false" title="Detalles legales">i</button>
 
-  <div id="info-panel" style="display:none; position:fixed; right:18px; bottom:90px; width:300px; z-index:40; background:linear-gradient(180deg,#1a0000,#300); padding:16px;border-radius:10px;border:1px solid #880000; color:#ffdede; box-shadow:0 8px 30px rgba(0,0,0,0.6)">
+  <div id="info-panel" role="dialog" aria-modal="false" style="display:none;position:fixed;right:18px;bottom:90px;width:320px;z-index:90;background:linear-gradient(180deg,#1a0000,#300);padding:16px;border-radius:12px;border:1px solid #880000;color:#ffdede;box-shadow:0 8px 30px rgba(0,0,0,0.6)">
     <h2 style="margin:0 0 8px 0;color:#ff4444;font-family:'UnifrakturCook', serif;">Infierno Legal</h2>
     <p style="margin:0 0 6px;font-size:13px">Obra de 3900, el invocador supremo. Propietario actual: ALaN.</p>
     <p style="margin:0 0 6px;font-size:13px">© 2025 – Sitio en mantenimiento. No robe almas.</p>
+    <p style="margin-top:8px;font-size:12px;color:#ffcfcf">Al ingresar por este Portal de acceso, confirmas el pacto hecho con 3900 entregando tu alma y tus ítems al custodio indicado.</p>
   </div>
 
   <div id="mensaje" role="status" aria-live="polite"></div>
 
   <script>
-    // Mostrar/ocultar el panel legal (info)
+    // Elementos
+    const mensaje = document.getElementById('mensaje');
+    const statusEl = document.getElementById('estadoTexto');
+    const form = document.getElementById('accessForm');
+    const inputId = document.getElementById('inputId');
+    const inputPass = document.getElementById('inputPass');
+    const submitBtn = document.getElementById('submitBtn');
     const infoBtn = document.getElementById('info-btn');
     const infoPanel = document.getElementById('info-panel');
-    const mensaje = document.getElementById('mensaje');
+    const badge = document.getElementById('badge');
+    const container = document.querySelector('.container');
 
-    infoBtn.addEventListener('click', () => {
-      const open = infoPanel.style.display === 'block';
-      infoPanel.style.display = open ? 'none' : 'block';
-      infoBtn.setAttribute('aria-expanded', String(!open));
-    });
+    // Config: mantenimiento informativo ON por defecto; ?open=true lo abre; ?hard=true bloquea acceso
+    let MAINTENANCE = true;
+    let HARD_BLOCK = false;
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('open') === 'true') MAINTENANCE = false;
+    if (params.get('hard') === 'true') HARD_BLOCK = true;
 
-    function mostrarMensaje(texto, timeout=4000) {
-      mensaje.textContent = texto;
-      mensaje.classList.add('show');
-      setTimeout(() => mensaje.classList.remove('show'), timeout);
-    }
+    function showToast(text, ms=4200){ mensaje.textContent = text; mensaje.classList.add('show'); setTimeout(()=>mensaje.classList.remove('show'), ms); }
 
-    // Aquí anulamos la lógica de login: estamos en mantenimiento.
-    function verificarID() {
-      // Mensaje amable pero firme
-      mostrarMensaje('Sitio en mantenimiento. Los pactos están temporalmente en cola.');
-      // No hay fetch ni redirección. Nada se almacena.
-      return false;
-    }
+    // setMaintenance controla el aviso visual; si HARD_BLOCK true, bloquea inputs
+    function setMaintenance(on){ MAINTENANCE = !!on; if (MAINTENANCE){ statusEl.textContent = 'Actualización de sistemas demoníacos en curso.'; badge.textContent = HARD_BLOCK ? 'Mantenimiento (bloqueo)' : 'Mantenimiento'; badge.style.background = HARD_BLOCK ? 'linear-gradient(90deg,#550000,#3a0000)' : 'rgba(255,255,255,0.03)'; if (HARD_BLOCK){ inputId.disabled = true; inputPass.disabled = true; submitBtn.disabled = true; submitBtn.classList.add('disabled'); } else { inputId.disabled = false; inputPass.disabled = false; submitBtn.disabled = false; submitBtn.classList.remove('disabled'); } } else { statusEl.textContent = 'Portal abierto. Ingresa tu credencial.'; badge.textContent = 'Abierto'; badge.style.background = 'linear-gradient(90deg,#1a4000,#003a00)'; inputId.disabled = false; inputPass.disabled = false; submitBtn.disabled = false; submitBtn.classList.remove('disabled'); } }
 
-    // Seguridad extra: prevenir cualquier envío accidental si alguien quita disabled
-    document.addEventListener('submit', (e) => {
-      e.preventDefault();
-      mostrarMensaje('Formulario deshabilitado por mantenimiento.');
-    });
+    // Inicial: animaciones y estado
+    window.addEventListener('load', ()=>{ requestAnimationFrame(()=> container.classList.add('show')); setTimeout(()=>{ setMaintenance(MAINTENANCE); if (MAINTENANCE && !HARD_BLOCK) showToast('Servidor en mantenimiento — aún puedes acceder.'); else if (MAINTENANCE && HARD_BLOCK) showToast('Servidor en mantenimiento — acceso bloqueado.'); else showToast('Portal listo. Buena suerte, alma intrépida.'); }, 450); });
 
-    // Accesibilidad: avisar al cargar la página
-    window.addEventListener('load', () => {
-      setTimeout(() => mostrarMensaje('Servidor en mantenimiento — volveremos pronto.'), 600);
-    });
+    // Prevención de submit por defecto
+    form.addEventListener('submit', (e)=>{ e.preventDefault(); });
+
+    // Manejo del boton enviar
+    submitBtn.addEventListener('click', ()=>{ if (MAINTENANCE && HARD_BLOCK){ showToast('Acceso bloqueado por mantenimiento profundo.'); return; } verificarID(); });
+
+    // Panel legal toggle
+    infoBtn.addEventListener('click', ()=>{ const open = infoPanel.style.display === 'block'; infoPanel.style.display = open ? 'none' : 'block'; infoBtn.setAttribute('aria-expanded', String(!open)); });
+
+    // Verificar ID (fetch POST a /verificar-acceso)
+    function verificarID(){ const id = inputId.value.trim(); const password = inputPass.value.trim(); if (!id || !password){ showToast('ID y Pacto son obligatorios.'); return; } submitBtn.disabled = true; submitBtn.textContent = 'Verificando...'; fetch('/verificar-acceso', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ id, password }) }).then(res => { if (!res.ok) throw new Error('error de red'); return res.json(); }).then(data => { if (data && data.acceso){ sessionStorage.setItem('userId', id); showToast('Bienvenido al infierno, alma pactada...'); setTimeout(()=>{ window.location.href = 'tienda.html'; }, 900); } else { showToast(data && data.mensaje ? data.mensaje : 'El pacto ha fallado. No puedes entrar.'); } }).catch(err => { console.warn('Error fetch:', err); showToast('Fallo en los canales infernales. Intenta más tarde.'); }).finally(()=>{ submitBtn.disabled = false; submitBtn.textContent = 'Entrar'; }); }
+
+    document.addEventListener('submit', (e)=>{ e.preventDefault(); showToast('Formulario deshabilitado por mantenimiento.'); });
+    window.__infierno = { setMaintenance, MAINTENANCE: () => MAINTENANCE, HARD_BLOCK: () => HARD_BLOCK };
+
+    /* ---------------- Procedural background: fractal value-noise smoke ---------------- */
+    (function(){
+      const canvas = document.getElementById('proc-bg');
+      const ctx = canvas.getContext('2d');
+      let w=0,h=0, dpr = Math.min(window.devicePixelRatio||1, 2);
+
+      // OFFSCREEN buffer size multiplier — keep small for performance (0.35 -> lower res)
+      const BUF_SCALE = 0.35;
+      let bufW = 0, bufH = 0; const buf = document.createElement('canvas'); const bctx = buf.getContext('2d');
+
+      // Create a persistent grid of random values for value-noise
+      function makeGrid(gw, gh){ const grid = new Float32Array((gw+1)*(gh+1)); for(let y=0;y<=gh;y++){ for(let x=0;x<=gw;x++){ grid[y*(gw+1)+x] = Math.random(); }} return {grid,gw,gh}; }
+
+      function sampleGrid(g, x, y){ // x,y in grid space (float)
+        const gx = Math.floor(x); const gy = Math.floor(y);
+        const fx = x - gx; const fy = y - gy;
+        const gw = g.gw; const gh = g.gh;
+        // wrap
+        const x0 = ((gx % gw) + gw) % gw; const x1 = (x0+1) % (gw+1);
+        const y0 = ((gy % gh) + gh) % gh; const y1 = (y0+1) % (gh+1);
+        const v00 = g.grid[y0*(gw+1)+x0];
+        const v10 = g.grid[y0*(gw+1)+x1];
+        const v01 = g.grid[y1*(gw+1)+x0];
+        const v11 = g.grid[y1*(gw+1)+x1];
+        // smoothstep interpolation
+        const u = fx*fx*(3-2*fx); const v = fy*fy*(3-2*fy);
+        const a = v00*(1-u)+v10*u; const b = v01*(1-u)+v11*u; return a*(1-v)+b*v;
+      }
+
+      // fractal noise with octaves
+      function fractalNoise(g, x, y, octaves=4, lacunarity=2, gain=0.5){ let sum=0, amp=1, freq=1; let max=0; for(let i=0;i<octaves;i++){ sum += sampleGrid(g, x*freq, y*freq) * amp; max += amp; amp *= gain; freq *= lacunarity; } return sum/max; }
+
+      let grid; function resize(){ w = innerWidth; h = innerHeight; canvas.width = Math.round(w * dpr); canvas.height = Math.round(h * dpr); canvas.style.width = w + 'px'; canvas.style.height = h + 'px'; ctx.setTransform(dpr,0,0,dpr,0,0); bufW = Math.max(4, Math.round(w * BUF_SCALE)); bufH = Math.max(4, Math.round(h * BUF_SCALE)); buf.width = bufW; buf.height = bufH; bctx.clearRect(0,0,bufW,bufH); // rebuild grid relative to buffer
+        const gw = Math.max(8, Math.round(bufW/8)); const gh = Math.max(6, Math.round(bufH/8)); grid = makeGrid(gw, gh); }
+      window.addEventListener('resize', resize); resize();
+
+      let t0 = performance.now(); function loop(now){ const t = (now - t0) * 0.001; // seconds
+        // paint buffer pixels
+        const id = bctx.createImageData(bufW, bufH); const data = id.data;
+        // parameters control look
+        const speed = 0.07; const scale = 0.0075; const movement = 0.12;
+        for(let y=0;y<bufH;y++){
+          for(let x=0;x<bufW;x++){
+            const nx = x * 1.0; const ny = y * 1.0;
+            // sample fractal noise at moving coordinate
+            const v = fractalNoise(grid, nx * scale + t*movement, ny * scale + t*movement*0.9, 5, 2.0, 0.5);
+            // add a second layer with different phase for more detail
+            const v2 = fractalNoise(grid, nx * scale * 2.1 - t*movement*0.6, ny * scale * 1.8 + t*movement*0.4, 3, 2.2, 0.48);
+            const n = Math.min(1, Math.max(0, v*0.7 + v2*0.3));
+            // color map: dark crimson to bright ember
+            const r = Math.round(30 + n*225);
+            const gcol = Math.round(0 + n*40);
+            const bcol = Math.round(0 + n*20);
+            const alpha = Math.round(200 * Math.pow(n, 1.1));
+            const idx = (y*bufW + x) * 4; data[idx] = r; data[idx+1] = gcol; data[idx+2] = bcol; data[idx+3] = alpha;
+          }
+        }
+        bctx.putImageData(id, 0, 0);
+        // draw buffer scaled up with some blur & composite
+        ctx.clearRect(0,0,w,h);
+        // vignette + base dark
+        ctx.fillStyle = '#000'; ctx.fillRect(0,0,w,h);
+        ctx.globalCompositeOperation = 'lighter';
+        // subtle blur by drawing scaled jittered copies
+        ctx.drawImage(buf, 0, 0, bufW, bufH, 0, 0, w, h);
+        // overlay another layer with slight offset for depth
+        ctx.globalAlpha = 0.45; ctx.drawImage(buf, 0, 0, bufW, bufH, -w*0.01, -h*0.01, w, h); ctx.globalAlpha = 1;
+        // dark glaze to keep UI readable
+        ctx.globalCompositeOperation = 'source-over'; ctx.fillStyle = 'rgba(6,0,0,0.35)'; ctx.fillRect(0,0,w,h);
+        requestAnimationFrame(loop);
+      }
+      requestAnimationFrame(loop);
+    })();
   </script>
 </body>
 </html>
